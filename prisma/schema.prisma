@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Profil {
+  id            Int     @id @default(1)
+  nama_instansi String?
+  nama_dinas    String?
+  alamat        String?
+  telepon       String?
+  email         String?
+  kode_pos      String?
+  website       String?
+}
+
+model SuratMasuk {
+  id               String    @id @default(uuid())
+  no_surat         String?
+  asal_surat       String?
+  perihal          String?
+  tanggal_surat    DateTime?
+  tanggal_diterima DateTime?
+  sifat            String?
+  status           String?
+  disposisi        String?
+  ringkasan        String?
+  file_surat       String?
+
+  // --- Kolom AI ---
+  ocr_text           String?  @db.Text
+  ai_summary         String?  @db.Text
+  extracted_entities Json?
+  processing_status  String?  @default("PENDING") // PENDING, COMPLETED, FAILED
+  processing_error   String?  @db.Text
+  
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model SuratKeluar {
+  id            String    @id @default(uuid())
+  no_surat      String?
+  tujuan        String?
+  perihal       String?
+  tanggal_surat DateTime?
+  sifat         String?
+  status        String?
+  pembuat       String?
+  isi_ringkas   String?
+  file_surat    String?
+
+  // --- Kolom AI ---
+  ocr_text           String?  @db.Text
+  ai_summary         String?  @db.Text
+  extracted_entities Json?
+  processing_status  String?  @default("PENDING")
+  processing_error   String?  @db.Text
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}

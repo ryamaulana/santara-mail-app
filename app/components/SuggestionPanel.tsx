@@ -1,5 +1,6 @@
 import { MessageSquare, Send, Copy } from 'lucide-react';
 import Image from 'next/image';
+import Swal from 'sweetalert2';
 
 interface SuggestionPanelProps {
   data: any;
@@ -10,7 +11,15 @@ export default function SuggestionPanel({ data, imagePreviewUrl }: SuggestionPan
   const handleCopy = () => {
     if (data?.draf_balasan) {
       navigator.clipboard.writeText(data.draf_balasan);
-      alert('Draf balasan disalin ke clipboard!');
+      Swal.fire({
+        icon: 'success',
+        title: 'Tersalin!',
+        text: 'Draf balasan disalin ke clipboard!',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000
+      });
     }
   };
 
