@@ -17,6 +17,13 @@ model Profil {
   website       String?
 }
 
+enum ProcessingStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
 model SuratMasuk {
   id               String    @id @default(uuid())
   no_surat         String?
@@ -34,7 +41,7 @@ model SuratMasuk {
   ocr_text           String?  @db.Text
   ai_summary         String?  @db.Text
   extracted_entities Json?
-  processing_status  String?  @default("PENDING") // PENDING, COMPLETED, FAILED
+  processing_status  ProcessingStatus @default(PENDING)
   processing_error   String?  @db.Text
   
   createdAt        DateTime  @default(now())
@@ -57,7 +64,7 @@ model SuratKeluar {
   ocr_text           String?  @db.Text
   ai_summary         String?  @db.Text
   extracted_entities Json?
-  processing_status  String?  @default("PENDING")
+  processing_status  ProcessingStatus @default(PENDING)
   processing_error   String?  @db.Text
 
   createdAt     DateTime  @default(now())

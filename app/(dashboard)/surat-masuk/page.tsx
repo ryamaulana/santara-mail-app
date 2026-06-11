@@ -40,9 +40,10 @@ export default function SuratMasukPage() {
   });
 
   const filteredSurat = suratMasuk.filter(s => {
-    const matchesSearch = s.perihal.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          s.no_surat.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          s.asal_surat.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch = (s.perihal || "").toLowerCase().includes(searchLower) || 
+                          (s.no_surat || "").toLowerCase().includes(searchLower) ||
+                          (s.asal_surat || "").toLowerCase().includes(searchLower);
     const matchesSifat = filterSifat === "Semua" || s.sifat === filterSifat;
     return matchesSearch && matchesSifat;
   });
@@ -418,12 +419,15 @@ export default function SuratMasukPage() {
                     <div className="w-full flex flex-col items-center h-full">
                       <p className="text-sm font-bold text-slate-800 mb-2">Pratinjau Berkas Fisik Digital</p>
                       {selectedSuratData.file_surat.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? (
-                        <div className="w-full flex-1 overflow-auto bg-slate-100/50 rounded border border-slate-200 p-2 flex items-center justify-center">
-                          <img 
-                            src={selectedSuratData.file_surat.startsWith('http') || selectedSuratData.file_surat.startsWith('/') ? selectedSuratData.file_surat : `/${selectedSuratData.file_surat}`} 
-                            alt="Preview" 
-                            className="max-w-full max-h-full object-contain" 
-                          />
+                        <div className="w-full flex flex-col items-center">
+                          <div className="w-full flex-1 overflow-auto bg-slate-100/50 rounded border border-slate-200 p-2 flex items-center justify-center">
+                            <img 
+                              src={selectedSuratData.file_surat.startsWith('http') || selectedSuratData.file_surat.startsWith('/') ? selectedSuratData.file_surat : `/${selectedSuratData.file_surat}`} 
+                              alt="Preview" 
+                              className="max-w-full max-h-full object-contain" 
+                            />
+                          </div>
+                          <p className="mt-2 text-xs font-mono text-slate-500 break-all text-center">Path: {selectedSuratData.file_surat}</p>
                         </div>
                       ) : (
                         <div className="p-4 bg-white border border-slate-200 rounded flex flex-col items-center w-full">

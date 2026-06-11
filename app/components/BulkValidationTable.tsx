@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Download, Table as TableIcon, Save, AlertTriangle, ChevronDown } from 'lucide-react';
+import { Download, Table as TableIcon, Save, AlertTriangle, ChevronDown, ChevronRight, CheckCircle2, FileText, LayoutList } from 'lucide-react';
 import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
 import { useSipedigStore } from '@/store/useSipedigStore';
@@ -27,8 +27,8 @@ export default function BulkValidationTable({ initialData }: BulkValidationTable
   const router = useRouter();
   const { addSuratMasuk, addSuratKeluar, suratMasuk, suratKeluar } = useSipedigStore();
   
-  // Set default jenis_surat = 'masuk'
   const [data, setData] = useState<ExtractedItem[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState<number>(0);
   
   useEffect(() => {
     setData(initialData.map(item => ({ ...item, jenis_surat: 'masuk' })));
@@ -89,15 +89,18 @@ export default function BulkValidationTable({ initialData }: BulkValidationTable
     router.push('/'); // kembali ke dashboard
   };
 
+  // Check if a specific item has a duplicate number
+  const isDuplicate = (item: ExtractedItem) => {
+    if (!item.nomor_surat || item.nomor_surat === 'Tanpa Nomor') return false;
+    if (item.jenis_surat === 'masuk') {
+      return suratMasuk.some(s => s.no_surat === item.nomor_surat);
+    } else {
+      return suratKeluar.some(s => s.no_surat === item.nomor_surat);
+    }
+  };
+
   const hasDuplicates = useMemo(() => {
-    return data.some(item => {
-      if (!item.nomor_surat || item.nomor_surat === 'Tanpa Nomor') return false;
-      if (item.jenis_surat === 'masuk') {
-        return suratMasuk.some(s => s.no_surat === item.nomor_surat);
-      } else {
-        return suratKeluar.some(s => s.no_surat === item.nomor_surat);
-      }
-    });
+    return data.some(item => isDuplicate(item));
   }, [data, suratMasuk, suratKeluar]);
 
   const exportToExcel = () => {
@@ -116,16 +119,18 @@ export default function BulkValidationTable({ initialData }: BulkValidationTable
     XLSX.writeFile(wb, "Rekap_Surat_Masuk.xlsx");
   };
 
+  const selectedItem = data[selectedIndex];
+
   return (
-    <div className="bg-white rounded-3xl shadow-sm border border-gray-100 flex-1 flex flex-col h-[calc(100vh-200px)] overflow-hidden">
-      <div className="p-6 border-b border-gray-100 flex items-center justify-between shrink-0">
+    <div className="bg-white rounded-3xl shadow-sm border border-gray-100 flex-1 flex flex-col h-[calc(100vh-140px)] overflow-hidden">
+      <div className="p-6 border-b border-gray-100 flex items-center justify-between shrink-0 bg-white z-20">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-            <TableIcon className="w-6 h-6" />
+            <LayoutList className="w-6 h-6" />
           </div>
           <div>
             <h2 className="text-xl font-bold text-gray-800">Verifikasi Massal ({data.length} Surat)</h2>
-            <p className="text-sm text-gray-500">Edit langsung pada tabel di bawah ini jika terdapat kesalahan</p>
+            <p className="text-sm text-gray-500">Pilih surat di daftar sebelah kiri untuk memverifikasi dan mengedit data.</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -147,104 +152,216 @@ export default function BulkValidationTable({ initialData }: BulkValidationTable
       </div>
 
       {hasDuplicates && (
-        <div className="p-4 mx-6 mt-4 bg-orange-50 text-orange-700 rounded-xl border border-orange-200 flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
-          <div>
-            <h4 className="font-bold text-orange-800 text-sm">Peringatan: Duplikasi Nomor Surat Ditemukan</h4>
-            <p className="text-xs mt-1">Beberapa surat dalam tabel ini memiliki nomor surat yang sudah ada di database. Harap periksa kembali sebelum menyimpan.</p>
-          </div>
+        <div className="p-3 mx-6 mt-4 bg-orange-50 text-orange-700 rounded-xl border border-orange-200 flex items-center gap-3 shrink-0">
+          <AlertTriangle className="w-5 h-5 text-orange-500 shrink-0" />
+          <p className="text-sm font-medium">Beberapa surat memiliki nomor yang sudah ada di database. Harap periksa tanda peringatan pada daftar.</p>
         </div>
       )}
 
-      <div className="flex-1 overflow-auto p-0">
-        <table className="w-full text-left border-collapse">
-          <thead className="bg-gray-50 sticky top-0 shadow-sm z-10">
-            <tr>
-              <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200 min-w-[150px]">Jenis Surat</th>
-              <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200 min-w-[150px]">Nomor Surat</th>
-              <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200 min-w-[150px]">Tanggal</th>
-              <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200 min-w-[200px]">Perihal</th>
-              <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200 min-w-[200px]">Asal / Tujuan</th>
-              <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200 min-w-[150px]">Sifat Surat</th>
-              <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200 min-w-[300px]">Ringkasan</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {data.map((row, index) => (
-              <tr key={index} className="hover:bg-indigo-50/30 transition-colors">
-                <td className="p-2">
-                  <div className="relative inline-block w-full">
-                    <select 
-                      value={row.jenis_surat || 'masuk'} 
-                      onChange={(e) => handleCellChange(index, 'jenis_surat', e.target.value)}
-                      className="w-full p-2 pr-6 text-xs font-bold bg-indigo-50 text-indigo-700 border border-transparent focus:border-indigo-500 rounded-lg outline-none transition-all appearance-none cursor-pointer"
-                    >
-                      <option value="masuk">Masuk</option>
-                      <option value="keluar">Keluar</option>
-                    </select>
-                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-indigo-500 pointer-events-none" />
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Panel: Master List */}
+        <div className="w-1/3 min-w-[320px] max-w-[400px] border-r border-gray-100 bg-gray-50/30 flex flex-col overflow-hidden">
+          <div className="p-4 border-b border-gray-100 bg-white shrink-0">
+            <h3 className="font-semibold text-gray-700 text-sm flex items-center justify-between">
+              Daftar Surat
+              <span className="bg-indigo-100 text-indigo-700 py-0.5 px-2 rounded-full text-xs">{data.length} Item</span>
+            </h3>
+          </div>
+          <div className="flex-1 overflow-y-auto p-3 space-y-2">
+            {data.map((item, index) => {
+              const isSelected = selectedIndex === index;
+              const hasWarning = isDuplicate(item);
+              
+              return (
+                <div 
+                  key={index}
+                  onClick={() => setSelectedIndex(index)}
+                  className={`p-3 rounded-xl cursor-pointer border transition-all ${
+                    isSelected 
+                      ? 'bg-indigo-50 border-indigo-200 shadow-sm ring-1 ring-indigo-500' 
+                      : 'bg-white border-gray-100 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-1.5">
+                    <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded ${
+                      item.jenis_surat === 'keluar' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
+                    }`}>
+                      {item.jenis_surat === 'keluar' ? 'Surat Keluar' : 'Surat Masuk'}
+                    </span>
+                    {hasWarning && (
+                      <AlertTriangle className="w-4 h-4 text-orange-500" title="Nomor surat duplikat" />
+                    )}
                   </div>
-                  <div className="text-[10px] text-gray-400 mt-1 truncate max-w-[120px]" title={row.fileName}>{row.fileName || '-'}</div>
-                </td>
-                <td className="p-2">
-                  <input 
-                    type="text" 
-                    value={row.nomor_surat || ''} 
-                    onChange={(e) => handleCellChange(index, 'nomor_surat', e.target.value)}
-                    className="w-full p-2 text-sm bg-transparent border border-transparent hover:border-gray-200 focus:border-indigo-500 focus:bg-white rounded outline-none transition-all"
-                  />
-                </td>
-                <td className="p-2">
-                  <input 
-                    type="text" 
-                    value={row.tanggal_surat || ''} 
-                    onChange={(e) => handleCellChange(index, 'tanggal_surat', e.target.value)}
-                    className="w-full p-2 text-sm bg-transparent border border-transparent hover:border-gray-200 focus:border-indigo-500 focus:bg-white rounded outline-none transition-all"
-                  />
-                </td>
-                <td className="p-2">
-                  <input 
-                    type="text" 
-                    value={row.perihal || ''} 
-                    onChange={(e) => handleCellChange(index, 'perihal', e.target.value)}
-                    className="w-full p-2 text-sm bg-transparent border border-transparent hover:border-gray-200 focus:border-indigo-500 focus:bg-white rounded outline-none transition-all"
-                  />
-                </td>
-                <td className="p-2">
-                  <input 
-                    type="text" 
-                    value={row.jenis_surat === 'keluar' ? (row.ditujukan_kepada || '') : (row.pengirim || '')} 
-                    onChange={(e) => handleCellChange(index, row.jenis_surat === 'keluar' ? 'ditujukan_kepada' : 'pengirim', e.target.value)}
-                    placeholder={row.jenis_surat === 'keluar' ? "Tujuan" : "Asal Surat"}
-                    className="w-full p-2 text-sm bg-transparent border border-transparent hover:border-gray-200 focus:border-indigo-500 focus:bg-white rounded outline-none transition-all"
-                  />
-                </td>
-                <td className="p-2">
-                  <div className="relative inline-block w-full">
+                  
+                  <h4 className={`font-semibold text-sm truncate mb-1 ${isSelected ? 'text-indigo-900' : 'text-gray-800'}`}>
+                    {item.nomor_surat || 'Tanpa Nomor'}
+                  </h4>
+                  
+                  <div className="flex items-center gap-1.5 text-xs text-gray-500 truncate mb-2">
+                    <FileText className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate">{item.fileName || 'Data Manual'}</span>
+                  </div>
+                  
+                  <div className="text-xs text-gray-500 truncate">
+                    <span className="font-medium">{item.jenis_surat === 'keluar' ? 'Tujuan: ' : 'Asal: '}</span>
+                    {item.jenis_surat === 'keluar' ? (item.ditujukan_kepada || '-') : (item.pengirim || '-')}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Right Panel: Detail Editor */}
+        <div className="flex-1 bg-white overflow-y-auto">
+          {selectedItem ? (
+            <div className="max-w-4xl mx-auto p-8">
+              <div className="flex items-center justify-between mb-8 pb-4 border-b border-gray-100">
+                <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
+                  Detail Ekstraksi
+                  <span className="text-sm font-medium bg-gray-100 text-gray-600 px-3 py-1 rounded-full">
+                    {selectedIndex + 1} dari {data.length}
+                  </span>
+                </h3>
+                {isDuplicate(selectedItem) && (
+                  <div className="flex items-center gap-2 text-orange-600 bg-orange-50 px-3 py-1.5 rounded-lg border border-orange-200">
+                    <AlertTriangle className="w-4 h-4" />
+                    <span className="text-sm font-medium">Nomor Surat Duplikat</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold text-gray-700">Jenis Surat</label>
+                  <div className="relative">
                     <select 
-                      value={row.sifat_surat || 'Biasa'} 
-                      onChange={(e) => handleCellChange(index, 'sifat_surat', e.target.value)}
-                      className="w-full p-2 pr-6 text-sm bg-transparent border border-transparent hover:border-gray-200 focus:border-indigo-500 focus:bg-white rounded-lg outline-none transition-all appearance-none cursor-pointer"
+                      value={selectedItem.jenis_surat || 'masuk'} 
+                      onChange={(e) => handleCellChange(selectedIndex, 'jenis_surat', e.target.value)}
+                      className="w-full p-3 pr-10 text-sm font-medium bg-gray-50 border border-gray-200 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent rounded-xl outline-none transition-all appearance-none cursor-pointer"
+                    >
+                      <option value="masuk">Surat Masuk</option>
+                      <option value="keluar">Surat Keluar</option>
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                  </div>
+                </div>
+                
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold text-gray-700">Sifat Surat</label>
+                  <div className="relative">
+                    <select 
+                      value={selectedItem.sifat_surat || 'Biasa'} 
+                      onChange={(e) => handleCellChange(selectedIndex, 'sifat_surat', e.target.value)}
+                      className="w-full p-3 pr-10 text-sm font-medium bg-gray-50 border border-gray-200 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent rounded-xl outline-none transition-all appearance-none cursor-pointer"
                     >
                       <option value="Biasa">Biasa</option>
                       <option value="Penting">Penting</option>
                       <option value="Rahasia">Rahasia</option>
+                      <option value="Segera">Segera</option>
                     </select>
-                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
                   </div>
-                </td>
-                <td className="p-2">
-                  <textarea 
-                    value={row.ringkasan || ''} 
-                    onChange={(e) => handleCellChange(index, 'ringkasan', e.target.value)}
-                    rows={2}
-                    className="w-full p-2 text-sm bg-transparent border border-transparent hover:border-gray-200 focus:border-indigo-500 focus:bg-white rounded outline-none resize-none transition-all"
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold text-gray-700 flex items-center justify-between">
+                    Nomor Surat
+                    {isDuplicate(selectedItem) && <span className="text-xs text-orange-600 font-medium">Sudah ada di DB</span>}
+                  </label>
+                  <input 
+                    type="text" 
+                    value={selectedItem.nomor_surat || ''} 
+                    onChange={(e) => handleCellChange(selectedIndex, 'nomor_surat', e.target.value)}
+                    placeholder="Masukkan nomor surat"
+                    className={`w-full p-3 text-sm text-gray-800 bg-gray-50 border focus:bg-white focus:ring-2 outline-none transition-all rounded-xl ${
+                      isDuplicate(selectedItem) 
+                        ? 'border-orange-300 focus:ring-orange-500 focus:border-transparent' 
+                        : 'border-gray-200 focus:ring-indigo-500 focus:border-transparent'
+                    }`}
                   />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold text-gray-700">Tanggal Surat</label>
+                  <input 
+                    type="text" 
+                    value={selectedItem.tanggal_surat || ''} 
+                    onChange={(e) => handleCellChange(selectedIndex, 'tanggal_surat', e.target.value)}
+                    placeholder="Contoh: 17 Juni 2019"
+                    className="w-full p-3 text-sm text-gray-800 bg-gray-50 border border-gray-200 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent rounded-xl outline-none transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5 mb-6">
+                <label className="text-sm font-semibold text-gray-700">Perihal</label>
+                <textarea 
+                  value={selectedItem.perihal || ''} 
+                  onChange={(e) => handleCellChange(selectedIndex, 'perihal', e.target.value)}
+                  rows={2}
+                  placeholder="Perihal surat..."
+                  className="w-full p-3 text-sm text-gray-800 bg-gray-50 border border-gray-200 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent rounded-xl outline-none resize-y transition-all"
+                />
+              </div>
+
+              <div className="space-y-1.5 mb-6">
+                <label className="text-sm font-semibold text-gray-700">
+                  {selectedItem.jenis_surat === 'keluar' ? 'Ditujukan Kepada' : 'Asal Surat (Pengirim)'}
+                </label>
+                <textarea 
+                  value={selectedItem.jenis_surat === 'keluar' ? (selectedItem.ditujukan_kepada || '') : (selectedItem.pengirim || '')} 
+                  onChange={(e) => handleCellChange(selectedIndex, selectedItem.jenis_surat === 'keluar' ? 'ditujukan_kepada' : 'pengirim', e.target.value)}
+                  rows={2}
+                  placeholder={selectedItem.jenis_surat === 'keluar' ? "Instansi tujuan..." : "Instansi asal..."}
+                  className="w-full p-3 text-sm text-gray-800 bg-gray-50 border border-gray-200 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent rounded-xl outline-none resize-y transition-all"
+                />
+              </div>
+
+              <div className="space-y-1.5 mb-8">
+                <label className="text-sm font-semibold text-gray-700">Ringkasan</label>
+                <textarea 
+                  value={selectedItem.ringkasan || ''} 
+                  onChange={(e) => handleCellChange(selectedIndex, 'ringkasan', e.target.value)}
+                  rows={4}
+                  placeholder="Ringkasan isi surat..."
+                  className="w-full p-3 text-sm text-gray-800 bg-gray-50 border border-gray-200 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent rounded-xl outline-none resize-y transition-all"
+                />
+              </div>
+
+              {/* Navigation Footer */}
+              <div className="flex items-center justify-between pt-6 border-t border-gray-100">
+                <button
+                  onClick={() => setSelectedIndex(Math.max(0, selectedIndex - 1))}
+                  disabled={selectedIndex === 0}
+                  className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Selesai & Sebelumnya
+                </button>
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <CheckCircle2 className="w-5 h-5 text-green-500" />
+                  Tersimpan otomatis
+                </div>
+                <button
+                  onClick={() => setSelectedIndex(Math.min(data.length - 1, selectedIndex + 1))}
+                  disabled={selectedIndex === data.length - 1}
+                  className="px-5 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                >
+                  Selesai & Selanjutnya
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+
+            </div>
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center text-gray-400">
+              <LayoutList className="w-16 h-16 mb-4 text-gray-200" />
+              <p>Pilih surat dari daftar untuk melihat detail</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

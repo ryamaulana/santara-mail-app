@@ -33,7 +33,10 @@ export default function AIReaderPage() {
       if (!response.ok) {
         throw new Error(data.detail || 'Terjadi kesalahan saat memproses gambar.');
       }
-      return { ...data.parsed_data, fileName: file.name };
+      return { 
+        ...(data.parsed_data || {}), 
+        fileName: data.file_url || file.name 
+      };
     }
   });
 
