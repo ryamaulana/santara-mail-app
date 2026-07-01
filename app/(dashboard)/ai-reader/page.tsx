@@ -23,8 +23,12 @@ export default function AIReaderPage() {
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append('file', file);
-      
-      const response = await fetch('http://localhost:8000/api/extract-surat', {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const fetchUrl = baseUrl.endsWith('/api') 
+        ? `${baseUrl}/extract-surat` 
+        : `${baseUrl}/api/extract-surat`;
+        
+      const response = await fetch(fetchUrl, {
         method: 'POST',
         body: formData,
       });
