@@ -80,24 +80,24 @@ export function Sidebar({
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-64 h-screen max-h-screen bg-slate-900 text-slate-100 flex flex-col justify-between border-r border-slate-800 shrink-0 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 lg:h-screen overflow-hidden print:hidden',
+          'fixed inset-y-0 left-0 z-50 w-64 h-screen max-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between border-r border-slate-900 shrink-0 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 lg:h-screen overflow-hidden print:hidden',
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
         {/* Brand */}
-        <div className="p-6 border-b border-slate-800 flex items-center justify-between shrink-0">
+        <div className="p-6 border-b border-slate-900 bg-gradient-to-b from-slate-950 to-slate-900/10 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-3">
-            <div className="bg-indigo-600 p-2 rounded-lg text-white">
-              <MailOpen className="w-6 h-6" />
+            <div className="bg-gradient-to-tr from-emerald-600 to-emerald-700 p-2.5 rounded-xl text-white shadow-lg shadow-emerald-600/20">
+              <MailOpen className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="font-bold text-lg leading-tight">SIPEDIG 110</h1>
-              <p className="text-xs text-slate-400">E-Persuratan Modern</p>
+              <h1 className="font-extrabold text-base leading-tight tracking-tight text-white">SIPEDIG 110</h1>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">E-Persuratan</p>
             </div>
           </div>
           <button
             onClick={() => setIsOpen(false)}
-            className="lg:hidden text-slate-400 hover:text-white"
+            className="lg:hidden text-slate-400 hover:text-white p-1 hover:bg-slate-900 rounded-lg transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -113,16 +113,16 @@ export function Sidebar({
                 href={item.href}
                 onClick={() => setIsOpen(false)}
                 className={cn(
-                  'w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-all',
+                  'w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200',
                   isActive
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                    ? 'bg-slate-800 text-white border border-slate-700/30'
+                    : 'text-slate-400 hover:bg-slate-900/40 hover:text-slate-200 hover:translate-x-0.5'
                 )}
               >
                 <div className="flex items-center space-x-3">
                   <item.icon
                     className={cn(
-                      'w-[18px] h-[18px]',
+                      'w-[18px] h-[18px] transition-transform group-hover:scale-105',
                       !isActive && item.iconColor
                     )}
                   />
@@ -131,7 +131,7 @@ export function Sidebar({
                 {item.badge !== undefined && (
                   <span
                     className={cn(
-                      'text-xs px-2 py-0.5 rounded-full font-bold',
+                      'text-[10px] px-2 py-0.5 rounded-full font-bold',
                       isActive ? 'bg-white/20 text-white' : item.badgeBg
                     )}
                   >
@@ -144,40 +144,33 @@ export function Sidebar({
         </nav>
 
         {/* User Info & Logout */}
-        <div className="p-4 border-t border-slate-800 bg-slate-950/50 flex flex-col space-y-3 shrink-0">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full bg-indigo-50/20 text-indigo-400 flex items-center justify-center font-bold shrink-0">
+        <div className="p-4 border-t border-slate-900 bg-slate-950/80 flex flex-col space-y-3 shrink-0">
+          <div className="flex items-center space-x-3 bg-slate-900/20 p-2 rounded-xl border border-slate-900">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500/10 to-emerald-500/20 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-extrabold text-xs shrink-0">
               {isAdmin ? 'ADM' : 'VWR'}
             </div>
             <div className="overflow-hidden">
               <div className="flex items-center space-x-1.5">
-                <p className="text-xs font-semibold text-slate-200 truncate">
+                <p className="text-xs font-bold text-slate-200 truncate">
                   {userName}
                 </p>
                 <span
                   className={cn(
                     'px-1.5 py-0.5 rounded text-[8px] font-bold shrink-0',
                     isAdmin
-                      ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                       : 'bg-slate-500/20 text-slate-400 border border-slate-500/30'
                   )}
                 >
                   {isAdmin ? 'Admin' : 'Viewer'}
                 </span>
               </div>
-              <p className="text-[10px] text-slate-400 truncate">{userEmail}</p>
+              <p className="text-[10px] font-semibold text-slate-500 truncate">{userEmail}</p>
             </div>
           </div>
-          {/* Logout Button */}
-          <Link
-            href="/login"
-            className="w-full py-2 px-3 bg-rose-950/30 hover:bg-rose-900/40 border border-rose-900/30 rounded-lg text-xs font-semibold text-rose-400 flex items-center justify-center space-x-2 transition cursor-pointer"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>Keluar Sistem</span>
-          </Link>
         </div>
       </aside>
+
     </>
   );
 }

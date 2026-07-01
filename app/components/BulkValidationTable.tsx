@@ -189,7 +189,9 @@ export default function BulkValidationTable({ initialData }: BulkValidationTable
                       {item.jenis_surat === 'keluar' ? 'Surat Keluar' : 'Surat Masuk'}
                     </span>
                     {hasWarning && (
-                      <AlertTriangle className="w-4 h-4 text-orange-500" title="Nomor surat duplikat" />
+                      <span title="Nomor surat duplikat">
+                        <AlertTriangle className="w-4 h-4 text-orange-500" />
+                      </span>
                     )}
                   </div>
                   

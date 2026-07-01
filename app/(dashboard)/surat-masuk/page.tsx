@@ -192,12 +192,12 @@ export default function SuratMasukPage() {
             </thead>
             <tbody className="divide-y divide-slate-100 text-sm">
               {filteredSurat.length === 0 ? (
-                <tr>
+                <tr key="empty-state">
                   <td colSpan={6} className="px-6 py-12 text-center text-slate-400">Tidak ada data surat masuk ditemukan.</td>
                 </tr>
               ) : (
-                filteredSurat.map((row) => (
-                  <tr key={row.id} className="hover:bg-slate-50/50 transition-colors">
+                filteredSurat.map((row, index) => (
+                  <tr key={`${row.id}-${index}`} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-6 py-4 font-bold text-slate-800">{row.id}</td>
                     <td className="px-6 py-4 space-y-1">
                       <Badge variant={getSifatColor(row.sifat) as any}>{row.sifat}</Badge>

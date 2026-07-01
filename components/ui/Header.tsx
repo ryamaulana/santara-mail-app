@@ -15,41 +15,43 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   });
 
   return (
-    <header className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-4 sm:px-8 shrink-0 print:hidden">
+    <header className="h-16 border-b border-slate-200/50 bg-white/75 backdrop-blur-md flex items-center justify-between px-4 sm:px-8 shrink-0 sticky top-0 z-30 print:hidden">
       <div className="flex items-center space-x-3">
         <button
           onClick={onMenuClick}
-          className="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+          className="lg:hidden p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100/80 rounded-xl transition cursor-pointer"
         >
           <Menu className="w-5 h-5" />
         </button>
-        <h2 className="text-base sm:text-lg font-bold text-slate-800 capitalize truncate">
+        <h2 className="text-sm sm:text-base font-extrabold text-slate-800 tracking-tight capitalize truncate">
           SIPEDIG 110
         </h2>
       </div>
 
       <div className="flex items-center space-x-4">
-        <span className="text-xs sm:text-sm text-slate-500 hidden md:inline">
-          Hari ini: <strong className="text-slate-700">{formattedDate}</strong>
+        <span className="text-xs text-slate-400 font-semibold hidden md:inline">
+          Hari ini: <strong className="text-slate-600 font-bold">{formattedDate}</strong>
         </span>
-        <div className="h-8 w-px bg-slate-200 hidden md:block"></div>
-        <div className="flex items-center space-x-2 truncate">
-          <Building className="w-[18px] h-[18px] text-slate-400 shrink-0" />
-          <span className="text-xs sm:text-sm font-semibold text-indigo-600 truncate max-w-[120px] sm:max-w-none">
+        <div className="h-6 w-px bg-slate-200 hidden md:block"></div>
+        <div className="flex items-center space-x-2 truncate bg-emerald-50/50 border border-emerald-100/50 px-3 py-1.5 rounded-xl">
+          <Building className="w-4 h-4 text-emerald-600 shrink-0" />
+          <span className="text-xs font-bold text-emerald-700 truncate max-w-[120px] sm:max-w-none">
             {profil.nama_dinas}
           </span>
         </div>
-        {/* Tombol Keluar Cepat untuk Laptop/Desktop */}
-        <div className="h-8 w-px bg-slate-200 hidden lg:block"></div>
+        
+        {/* Tombol Keluar Cepat */}
+        <div className="h-6 w-px bg-slate-200 block"></div>
         <Link
           href="/login"
-          className="hidden lg:flex items-center space-x-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 rounded-lg text-xs font-semibold transition"
+          className="flex items-center space-x-1.5 px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 rounded-xl text-xs font-bold transition cursor-pointer border border-rose-500/10"
           title="Keluar dari sistem"
         >
           <LogOut className="w-3.5 h-3.5" />
-          <span>Keluar</span>
+          <span className="hidden sm:inline">Keluar</span>
         </Link>
       </div>
     </header>
   );
 }
+

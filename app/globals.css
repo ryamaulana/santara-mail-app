@@ -9,17 +9,46 @@
 
 :root {
   --background: #f8fafc; /* slate-50 */
-  --foreground: #1e293b; /* slate-800 */
+  --foreground: #0f172a; /* slate-900 for better contrast */
+  --card-border: rgba(226, 232, 240, 0.8);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* For this project, we'll keep the light theme as default for the app content 
-       except for login and sidebar which have hardcoded dark classes */
     --background: #f8fafc;
-    --foreground: #1e293b;
+    --foreground: #0f172a;
+    --card-border: rgba(226, 232, 240, 0.8);
   }
 }
+
+@utility glass-card {
+  background-color: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--card-border);
+}
+
+@utility shadow-soft {
+  box-shadow: 0 4px 20px -2px rgba(148, 163, 184, 0.06), 0 2px 8px -1px rgba(148, 163, 184, 0.04);
+}
+
+@utility shadow-premium {
+  box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.06), 0 8px 16px -8px rgba(15, 23, 42, 0.04);
+}
+
+@keyframes bounce-subtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@utility animate-bounce-subtle {
+  animation: bounce-subtle 2s ease-in-out infinite;
+}
+
 
 body {
   background: var(--background);
