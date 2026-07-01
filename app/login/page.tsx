@@ -10,12 +10,10 @@ export default function LoginPage() {
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md z-10">
         <div className="flex justify-center">
-          <div className="bg-indigo-600 p-3 rounded-2xl text-white shadow-xl shadow-indigo-600/20">
-            <MailOpen className="w-10 h-10" />
-          </div>
+          <img src="/santara-mail-logo.png" alt="Santara Mail Logo" className="h-16 object-contain" />
         </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-white">SIPEDIG 110</h2>
-        <p className="mt-2 text-center text-sm text-slate-400">
+        <h2 className="mt-4 text-center text-2xl font-extrabold text-white">SIPEDIG 110</h2>
+        <p className="mt-1 text-center text-sm text-slate-400">
           Sistem Informasi Persuratan Digital Modern
         </p>
       </div>

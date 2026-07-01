@@ -87,13 +87,7 @@ export function Sidebar({
         {/* Brand */}
         <div className="p-6 border-b border-slate-900 bg-gradient-to-b from-slate-950 to-slate-900/10 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-3">
-            <div className="bg-gradient-to-tr from-emerald-600 to-emerald-700 p-2.5 rounded-xl text-white shadow-lg shadow-emerald-600/20">
-              <MailOpen className="w-5 h-5" />
-            </div>
-            <div>
-              <h1 className="font-extrabold text-base leading-tight tracking-tight text-white">SIPEDIG 110</h1>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">E-Persuratan</p>
-            </div>
+            <img src="/santara-mail-logo.png" alt="Santara Mail Logo" className="h-10 object-contain" />
           </div>
           <button
             onClick={() => setIsOpen(false)}
