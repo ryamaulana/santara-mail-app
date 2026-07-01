@@ -40,6 +40,7 @@ RUN mkdir -p /app/public/uploads && chown nextjs:nodejs /app/public/uploads
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 
 # Set the correct permission for prerender cache
 RUN mkdir .next
