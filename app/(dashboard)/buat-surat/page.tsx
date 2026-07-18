@@ -1,15 +1,25 @@
 "use client";
 
 import { useSipedigStore } from "@/store/useSipedigStore";
-import { AlertTriangle, Printer, Edit3, Info, Download, Lock } from "lucide-react";
+import { AlertTriangle, Printer, Edit3, Download } from "lucide-react";
 import { useState } from "react";
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 import Swal from "sweetalert2";
 
+const EMPTY_PROFIL = {
+  nama_instansi: '',
+  nama_dinas: '',
+  alamat: '',
+  telepon: '',
+  email: '',
+  kode_pos: '',
+  website: '',
+};
+
 export default function BuatSuratPage() {
-  const { profil, addSuratKeluar, suratKeluar } = useSipedigStore();
-  const isAdmin = true;
+  const { profil: fetchedProfil, addSuratKeluar } = useSipedigStore();
+  const profil = fetchedProfil ?? EMPTY_PROFIL;
 
   const [form, setForm] = useState({
     jenisSurat: "Surat Tugas",
@@ -32,9 +42,7 @@ export default function BuatSuratPage() {
   };
 
   const handleSimpanDraf = () => {
-    const nextId = suratKeluar.length > 0 ? `SK-${String(suratKeluar.length + 1).padStart(3, '0')}` : 'SK-001';
     addSuratKeluar({
-      id: nextId,
       no_surat: form.nomorSurat,
       tujuan: form.penerimaNama,
       perihal: `${form.jenisSurat}: ${form.hal}`,
@@ -61,42 +69,35 @@ export default function BuatSuratPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500 print:m-0 print:p-0">
       {/* Tips Cetak - Enterprise Styling */}
-      <div className="bg-gradient-to-r from-slate-800 to-slate-900 border border-slate-700 text-slate-200 p-4 rounded-2xl text-xs flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between shadow-lg print:hidden">
+      <div className="bg-panel border border-panel-border text-panel-ink p-4 rounded-2xl text-xs flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between shadow-lg print:hidden">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-cyan-500/20 rounded-lg">
-            <AlertTriangle className="text-cyan-400 shrink-0 w-4 h-4" />
+          <div className="p-2 bg-panel-accent/20 rounded-lg">
+            <AlertTriangle className="text-panel-accent shrink-0 w-4 h-4" />
           </div>
           <span className="leading-relaxed"><strong>Tips Cetak:</strong> Atur ukuran kertas ke <strong>A4</strong> dan matikan "Header dan Footer" di dialog cetak browser untuk lembar surat yang rapi.</span>
         </div>
-        <button onClick={() => window.print()} className="w-full sm:w-auto bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-5 py-2.5 rounded-xl flex items-center justify-center space-x-2 transition-all shadow-[0_0_15px_rgba(8,145,178,0.5)] hover:shadow-[0_0_25px_rgba(8,145,178,0.6)] text-xs whitespace-nowrap">
+        <button onClick={() => window.print()} className="w-full sm:w-auto bg-accent-600 hover:bg-accent-500 text-white font-bold px-5 py-2.5 rounded-xl flex items-center justify-center space-x-2 transition-all shadow-md text-xs whitespace-nowrap">
           <Printer className="w-4 h-4" />
           <span>Cetak PDF</span>
         </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start print:grid-cols-1 print:gap-0 relative">
-        
-        {/* Form Kiri */}
-        <div className="lg:col-span-5 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6 print:hidden z-10 sticky top-6 max-h-[calc(100vh-8rem)] overflow-y-auto">
-          <div className="flex items-center space-x-3 border-b border-slate-100 pb-4">
-            <div className="p-2 bg-cyan-50 rounded-lg">
-              <Edit3 className="text-cyan-600 w-5 h-5" />
-            </div>
-            <h4 className="font-bold text-slate-800 text-base">Konfigurator Lembar Surat</h4>
-          </div>
 
-          {!isAdmin && (
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600 flex items-start space-x-3">
-              <Info className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
-              <span className="leading-relaxed">Anda dalam mode <strong>Lihat Saja (Viewer)</strong>. Anda dapat menguji konfigurator dan mencetak langsung, namun tidak dapat menyimpan draf ke database log.</span>
+        {/* Form Kiri */}
+        <div className="lg:col-span-5 bg-surface p-6 rounded-2xl border border-border shadow-sm space-y-6 print:hidden z-10 sticky top-6 max-h-[calc(100vh-8rem)] overflow-y-auto">
+          <div className="flex items-center space-x-3 border-b border-border pb-4">
+            <div className="p-2 bg-accent-50 rounded-lg">
+              <Edit3 className="text-accent-600 w-5 h-5" />
             </div>
-          )}
+            <h4 className="font-bold text-ink text-base">Konfigurator Lembar Surat</h4>
+          </div>
 
           <div className="space-y-5 text-xs">
             <div className="space-y-4">
               <div>
-                <label className="block font-bold text-slate-600 mb-1.5 uppercase tracking-wide text-[10px]">Jenis Naskah Dinas</label>
-                <select name="jenisSurat" value={form.jenisSurat} onChange={handleChange} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-colors font-medium">
+                <label className="block font-bold text-ink-soft mb-1.5 uppercase tracking-wide text-[10px]">Jenis Naskah Dinas</label>
+                <select name="jenisSurat" value={form.jenisSurat} onChange={handleChange} className="w-full p-2.5 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 transition-colors font-medium">
                   <option value="Surat Tugas">Surat Tugas</option>
                   <option value="Surat Undangan">Surat Undangan</option>
                   <option value="Surat Keterangan">Surat Keterangan</option>
@@ -105,85 +106,85 @@ export default function BuatSuratPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-bold text-slate-600 mb-1.5 uppercase tracking-wide text-[10px]">Nomor Surat Resmi</label>
-                  <input type="text" name="nomorSurat" value={form.nomorSurat} onChange={handleChange} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-colors font-medium" />
+                  <label className="block font-bold text-ink-soft mb-1.5 uppercase tracking-wide text-[10px]">Nomor Surat Resmi</label>
+                  <input type="text" name="nomorSurat" value={form.nomorSurat} onChange={handleChange} className="w-full p-2.5 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 transition-colors font-medium" />
                 </div>
                 <div>
-                  <label className="block font-bold text-slate-600 mb-1.5 uppercase tracking-wide text-[10px]">Tanggal Surat</label>
-                  <input type="date" name="tanggalSurat" value={form.tanggalSurat} onChange={handleChange} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-colors font-medium" />
+                  <label className="block font-bold text-ink-soft mb-1.5 uppercase tracking-wide text-[10px]">Tanggal Surat</label>
+                  <input type="date" name="tanggalSurat" value={form.tanggalSurat} onChange={handleChange} className="w-full p-2.5 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 transition-colors font-medium" />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-bold text-slate-600 mb-1.5 uppercase tracking-wide text-[10px]">Lampiran</label>
-                  <input type="text" name="lampiran" value={form.lampiran} onChange={handleChange} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-colors font-medium" />
+                  <label className="block font-bold text-ink-soft mb-1.5 uppercase tracking-wide text-[10px]">Lampiran</label>
+                  <input type="text" name="lampiran" value={form.lampiran} onChange={handleChange} className="w-full p-2.5 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 transition-colors font-medium" />
                 </div>
                 <div>
-                  <label className="block font-bold text-slate-600 mb-1.5 uppercase tracking-wide text-[10px]">Hal / Perihal</label>
-                  <input type="text" name="hal" value={form.hal} onChange={handleChange} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-colors font-medium" />
+                  <label className="block font-bold text-ink-soft mb-1.5 uppercase tracking-wide text-[10px]">Hal / Perihal</label>
+                  <input type="text" name="hal" value={form.hal} onChange={handleChange} className="w-full p-2.5 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 transition-colors font-medium" />
                 </div>
               </div>
             </div>
 
-            <div className="border-t border-slate-100 pt-5 space-y-4">
-              <h5 className="font-bold text-cyan-700 text-sm flex items-center gap-2">
-                <span className="w-1.5 h-4 bg-cyan-500 rounded-full"></span>
+            <div className="border-t border-border pt-5 space-y-4">
+              <h5 className="font-bold text-accent-700 text-sm flex items-center gap-2">
+                <span className="w-1.5 h-4 bg-accent-500 rounded-full"></span>
                 Penerima / Ditugaskan
               </h5>
               <div className="space-y-3">
                 <div>
-                  <label className="block font-bold text-slate-600 mb-1.5 uppercase tracking-wide text-[10px]">Nama Lengkap & Gelar</label>
-                  <input type="text" name="penerimaNama" value={form.penerimaNama} onChange={handleChange} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-colors font-medium" />
+                  <label className="block font-bold text-ink-soft mb-1.5 uppercase tracking-wide text-[10px]">Nama Lengkap & Gelar</label>
+                  <input type="text" name="penerimaNama" value={form.penerimaNama} onChange={handleChange} className="w-full p-2.5 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 transition-colors font-medium" />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-bold text-slate-600 mb-1.5 uppercase tracking-wide text-[10px]">Jabatan</label>
-                    <input type="text" name="penerimaJabatan" value={form.penerimaJabatan} onChange={handleChange} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-colors font-medium" />
+                    <label className="block font-bold text-ink-soft mb-1.5 uppercase tracking-wide text-[10px]">Jabatan</label>
+                    <input type="text" name="penerimaJabatan" value={form.penerimaJabatan} onChange={handleChange} className="w-full p-2.5 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 transition-colors font-medium" />
                   </div>
                   <div>
-                    <label className="block font-bold text-slate-600 mb-1.5 uppercase tracking-wide text-[10px]">NIP (Opsional)</label>
-                    <input type="text" name="penerimaNip" value={form.penerimaNip} onChange={handleChange} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-colors font-mono" />
+                    <label className="block font-bold text-ink-soft mb-1.5 uppercase tracking-wide text-[10px]">NIP (Opsional)</label>
+                    <input type="text" name="penerimaNip" value={form.penerimaNip} onChange={handleChange} className="w-full p-2.5 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 transition-colors font-mono" />
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="border-t border-slate-100 pt-5 space-y-4">
-              <h5 className="font-bold text-cyan-700 text-sm flex items-center gap-2">
-                <span className="w-1.5 h-4 bg-cyan-500 rounded-full"></span>
+            <div className="border-t border-border pt-5 space-y-4">
+              <h5 className="font-bold text-accent-700 text-sm flex items-center gap-2">
+                <span className="w-1.5 h-4 bg-accent-500 rounded-full"></span>
                 Isi Lembar Utama
               </h5>
               <div className="space-y-3">
                 <div>
-                  <label className="block font-bold text-slate-600 mb-1.5 uppercase tracking-wide text-[10px]">Deskripsi Surat / Konten Inti</label>
-                  <textarea name="isiSurat" rows={5} value={form.isiSurat} onChange={handleChange} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl resize-y focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-colors font-medium leading-relaxed"></textarea>
+                  <label className="block font-bold text-ink-soft mb-1.5 uppercase tracking-wide text-[10px]">Deskripsi Surat / Konten Inti</label>
+                  <textarea name="isiSurat" rows={5} value={form.isiSurat} onChange={handleChange} className="w-full p-3 bg-background border border-border rounded-xl resize-y focus:outline-none focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 transition-colors font-medium leading-relaxed"></textarea>
                 </div>
                 <div>
-                  <label className="block font-bold text-slate-600 mb-1.5 uppercase tracking-wide text-[10px]">Teks Penutup</label>
-                  <input type="text" name="penutupSurat" value={form.penutupSurat} onChange={handleChange} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-colors font-medium" />
+                  <label className="block font-bold text-ink-soft mb-1.5 uppercase tracking-wide text-[10px]">Teks Penutup</label>
+                  <input type="text" name="penutupSurat" value={form.penutupSurat} onChange={handleChange} className="w-full p-2.5 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 transition-colors font-medium" />
                 </div>
               </div>
             </div>
 
-            <div className="border-t border-slate-100 pt-5 space-y-4">
-              <h5 className="font-bold text-cyan-700 text-sm flex items-center gap-2">
-                <span className="w-1.5 h-4 bg-cyan-500 rounded-full"></span>
+            <div className="border-t border-border pt-5 space-y-4">
+              <h5 className="font-bold text-accent-700 text-sm flex items-center gap-2">
+                <span className="w-1.5 h-4 bg-accent-500 rounded-full"></span>
                 Penandatangan
               </h5>
               <div className="space-y-3">
                 <div>
-                  <label className="block font-bold text-slate-600 mb-1.5 uppercase tracking-wide text-[10px]">Nama Pejabat TTD</label>
-                  <input type="text" name="ttdNama" value={form.ttdNama} onChange={handleChange} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-colors font-medium" />
+                  <label className="block font-bold text-ink-soft mb-1.5 uppercase tracking-wide text-[10px]">Nama Pejabat TTD</label>
+                  <input type="text" name="ttdNama" value={form.ttdNama} onChange={handleChange} className="w-full p-2.5 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 transition-colors font-medium" />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-bold text-slate-600 mb-1.5 uppercase tracking-wide text-[10px]">Jabatan TTD</label>
-                    <input type="text" name="ttdJabatan" value={form.ttdJabatan} onChange={handleChange} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-colors font-medium" />
+                    <label className="block font-bold text-ink-soft mb-1.5 uppercase tracking-wide text-[10px]">Jabatan TTD</label>
+                    <input type="text" name="ttdJabatan" value={form.ttdJabatan} onChange={handleChange} className="w-full p-2.5 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 transition-colors font-medium" />
                   </div>
                   <div>
-                    <label className="block font-bold text-slate-600 mb-1.5 uppercase tracking-wide text-[10px]">NIP Pejabat</label>
-                    <input type="text" name="ttdNip" value={form.ttdNip} onChange={handleChange} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-colors font-mono" />
+                    <label className="block font-bold text-ink-soft mb-1.5 uppercase tracking-wide text-[10px]">NIP Pejabat</label>
+                    <input type="text" name="ttdNip" value={form.ttdNip} onChange={handleChange} className="w-full p-2.5 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 transition-colors font-mono" />
                   </div>
                 </div>
               </div>
@@ -191,22 +192,15 @@ export default function BuatSuratPage() {
           </div>
 
           <div className="pt-2">
-            {isAdmin ? (
-              <button onClick={handleSimpanDraf} className="w-full bg-slate-900 text-white hover:bg-slate-800 py-3 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 transition-all shadow-md hover:shadow-lg">
-                <Download className="w-4 h-4" />
-                <span>Simpan ke Log Surat Keluar</span>
-              </button>
-            ) : (
-              <button disabled className="w-full bg-slate-100 text-slate-400 border border-slate-200 py-3 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 cursor-not-allowed">
-                <Lock className="w-4 h-4" />
-                <span>Simpan Dinonaktifkan (Viewer)</span>
-              </button>
-            )}
+            <button onClick={handleSimpanDraf} className="w-full bg-accent-600 text-white hover:bg-accent-500 py-3 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 transition-all shadow-md hover:shadow-lg">
+              <Download className="w-4 h-4" />
+              <span>Simpan ke Log Surat Keluar</span>
+            </button>
           </div>
         </div>
 
         {/* Lembar A4 Preview Kanan */}
-        <div className="lg:col-span-7 w-full overflow-x-auto pb-10 print:overflow-visible flex justify-center bg-slate-100/50 rounded-3xl p-6 sm:p-10 border border-slate-200/60 print:bg-transparent print:border-none print:p-0">
+        <div className="lg:col-span-7 w-full overflow-x-auto pb-10 print:overflow-visible flex justify-center bg-background rounded-3xl p-6 sm:p-10 border border-border print:bg-transparent print:border-none print:p-0">
           <div className="bg-white shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] ring-1 ring-black/5 p-8 sm:p-12 mx-auto w-full min-w-[650px] lg:min-w-0 max-w-[210mm] min-h-[297mm] flex flex-col justify-between text-black font-serif print:shadow-none print:ring-0 print:p-0 print:my-0 transition-transform duration-500 hover:scale-[1.01] hover:shadow-[0_25px_60px_-12px_rgba(0,0,0,0.2)]">
             
             <div>

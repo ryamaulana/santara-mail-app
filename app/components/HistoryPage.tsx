@@ -27,16 +27,16 @@ export default function HistoryPage() {
     <div className="flex flex-col h-full max-w-7xl mx-auto w-full">
       <div className="flex items-center justify-between mb-8 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600">
+          <div className="w-10 h-10 rounded-xl bg-primary-100 flex items-center justify-center text-primary-700">
             <Database className="w-5 h-5" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-800">Riwayat Ekstraksi Surat</h2>
+          <h2 className="text-2xl font-bold text-ink">Riwayat Ekstraksi Surat</h2>
         </div>
-        
+
         {historyData.length > 0 && (
-          <button 
+          <button
             onClick={handleClearHistory}
-            className="text-red-500 hover:text-red-700 font-medium text-sm transition-colors"
+            className="text-danger hover:opacity-80 font-medium text-sm transition-colors"
           >
             Hapus Riwayat
           </button>
@@ -44,9 +44,9 @@ export default function HistoryPage() {
       </div>
 
       {historyData.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center bg-white rounded-3xl border border-gray-100 shadow-sm">
-          <Database className="w-16 h-16 text-gray-200 mb-4" />
-          <p className="text-gray-500 font-medium text-lg">Belum ada riwayat surat yang disimpan.</p>
+        <div className="flex-1 flex flex-col items-center justify-center card rounded-3xl">
+          <Database className="w-16 h-16 text-ink-soft/50 mb-4" />
+          <p className="text-ink-soft font-medium text-lg">Belum ada riwayat surat yang disimpan.</p>
         </div>
       ) : (
         <BulkValidationTable initialData={historyData} />

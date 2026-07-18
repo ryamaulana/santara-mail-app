@@ -48,17 +48,17 @@ export default function SuggestionPanel({ data, imagePreviewUrl }: SuggestionPan
       </div>
 
       {/* Referensi Dokumen Asli */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex-1">
-        <h3 className="text-xs font-bold text-gray-500 mb-4 uppercase tracking-wider text-center">Referensi Dokumen Asli</h3>
-        <div className="w-full bg-gray-50 rounded-2xl border border-gray-200 overflow-hidden flex items-center justify-center min-h-[200px]">
+      <div className="card rounded-3xl p-6 flex-1">
+        <h3 className="text-xs font-bold text-ink-soft mb-4 uppercase tracking-wider text-center">Referensi Dokumen Asli</h3>
+        <div className="w-full bg-background rounded-2xl border border-border overflow-hidden flex items-center justify-center min-h-[200px]">
           {imagePreviewUrl ? (
-            <img 
-              src={imagePreviewUrl} 
-              alt="Pratinjau Surat" 
+            <img
+              src={imagePreviewUrl}
+              alt="Pratinjau Surat"
               className="w-full h-auto object-contain max-h-64"
             />
           ) : (
-            <span className="text-gray-400 text-sm">Tidak ada gambar</span>
+            <span className="text-ink-soft text-sm">Tidak ada gambar</span>
           )}
         </div>
       </div>

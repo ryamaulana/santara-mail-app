@@ -24,6 +24,25 @@ enum ProcessingStatus {
   FAILED
 }
 
+enum Role {
+  SUPER_ADMIN
+  USER
+}
+
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  passwordHash String
+  name         String
+  role         Role     @default(USER)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  suratMasuk  SuratMasuk[]
+  suratKeluar SuratKeluar[]
+}
+
 model SuratMasuk {
   id               String    @id @default(uuid())
   no_surat         String?
@@ -43,9 +62,14 @@ model SuratMasuk {
   extracted_entities Json?
   processing_status  ProcessingStatus @default(PENDING)
   processing_error   String?  @db.Text
-  
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
+
+  @@index([userId])
 }
 
 model SuratKeluar {
@@ -67,6 +91,11 @@ model SuratKeluar {
   processing_status  ProcessingStatus @default(PENDING)
   processing_error   String?  @db.Text
 
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  @@index([userId])
 }

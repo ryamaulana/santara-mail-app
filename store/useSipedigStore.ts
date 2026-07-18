@@ -3,43 +3,56 @@ import { persist } from 'zustand/middleware';
 import { Profil, SuratMasuk, SuratKeluar } from '../types';
 
 interface SipedigState {
-  profil: Profil;
+  profil: Profil | null;
   suratMasuk: SuratMasuk[];
   suratKeluar: SuratKeluar[];
-  setProfil: (profil: Profil) => void;
-  
+
   // Data fetching
+  fetchProfil: () => Promise<void>;
+  updateProfil: (profil: Profil) => Promise<void>;
   fetchSuratMasuk: () => Promise<void>;
   fetchSuratKeluar: () => Promise<void>;
   
   // Mutations
-  addSuratMasuk: (surat: SuratMasuk) => Promise<void>;
+  addSuratMasuk: (surat: Omit<SuratMasuk, 'id'>) => Promise<void>;
   deleteSuratMasuk: (id: string) => Promise<void>;
   updateStatusMasuk: (id: string, status: string, disposisi: string) => Promise<void>;
-  
-  addSuratKeluar: (surat: SuratKeluar) => Promise<void>;
+
+  addSuratKeluar: (surat: Omit<SuratKeluar, 'id'>) => Promise<void>;
   updateStatusKeluar: (id: string, status: string) => Promise<void>;
   deleteSuratKeluar: (id: string) => Promise<void>;
 }
 
-const mockProfil: Profil = {
-  id: 1,
-  nama_instansi: 'PEMERINTAH PROVINSI DKI JAKARTA',
-  nama_dinas: 'SMA NEGERI 110 JAKARTA',
-  alamat: 'Jl. Bendungan Melayu No,80 Tugu Selatan -Koja Jakarta Utara',
-  telepon: '(021)-4350059',
-  email: 'surat@sman110jkt.sch.id',
-  kode_pos: '14260',
-  website: 'sma110.pusdatinku.com',
-};
-
 export const useSipedigStore = create<SipedigState>()(
   persist(
     (set) => ({
-      profil: mockProfil,
+      profil: null,
       suratMasuk: [],
       suratKeluar: [],
-      setProfil: (profil) => set({ profil }),
+
+      fetchProfil: async () => {
+        try {
+          const res = await fetch('/api/profil');
+          if (!res.ok) return;
+          const data = await res.json();
+          set({ profil: data });
+        } catch (error) {
+          console.error("Failed to fetch profil:", error);
+        }
+      },
+
+      updateProfil: async (profil) => {
+        const res = await fetch('/api/profil', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(profil),
+        });
+        if (!res.ok) {
+          throw new Error('Gagal menyimpan profil');
+        }
+        const updated = await res.json();
+        set({ profil: updated });
+      },
 
       fetchSuratMasuk: async () => {
         try {
@@ -149,9 +162,10 @@ export const useSipedigStore = create<SipedigState>()(
     }),
     {
       name: 'sipedig-storage',
-      // We don't want to persist the DB data in localStorage anymore, 
-      // but let's keep it to not break Profil or just omit them from persist.
-      partialize: (state) => ({ profil: state.profil }),
+      // profil/suratMasuk/suratKeluar are all DB-backed now; nothing needs
+      // localStorage persistence, this is kept only so useSipedigStore stays
+      // a drop-in persist() store if something needs caching later.
+      partialize: () => ({}),
     }
   )
 );

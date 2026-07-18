@@ -1,12 +1,22 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getCurrentUser } from '@/lib/auth';
 
 export async function GET() {
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  if (user.role !== 'USER') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
   try {
     const data = await prisma.suratMasuk.findMany({
+      where: { userId: user.id },
       orderBy: { createdAt: 'desc' }
     });
-    
+
     // Format dates to string to match existing frontend expectations if necessary
     const formattedData = data.map(d => ({
       ...d,
@@ -21,11 +31,19 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  if (user.role !== 'USER') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
   try {
     const body = await request.json();
     const data = await prisma.suratMasuk.create({
       data: {
-        id: body.id, // Or generate server side if needed
+        userId: user.id,
         no_surat: body.no_surat,
         asal_surat: body.asal_surat,
         perihal: body.perihal,

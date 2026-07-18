@@ -44,6 +44,12 @@ RUN mkdir -p /app/public/uploads && chown nextjs:nodejs /app/public/uploads
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
+COPY --from=builder /app/lib ./lib
+
+# Full node_modules (incl. tsx/bcryptjs) so `npx prisma db seed` can run
+# standalone inside this container — the Next.js server itself uses its own
+# self-contained copy under .next/standalone, unaffected by this.
+COPY --from=deps /app/node_modules ./node_modules
 
 # Set the correct permission for prerender cache
 RUN mkdir .next

@@ -39,17 +39,17 @@ export function Modal({ isOpen, onClose, title, children, icon, maxWidth = "max-
     <div
       ref={overlayRef}
       onClick={handleOverlayClick}
-      className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
     >
-      <div className={`bg-white rounded-2xl w-full ${maxWidth} shadow-2xl border border-slate-100 flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 transition-all duration-300`}>
-        <div className="px-6 py-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+      <div className={`bg-surface rounded-2xl w-full ${maxWidth} shadow-premium border border-border flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 transition-all duration-300`}>
+        <div className="px-6 py-4 border-b border-border bg-background flex justify-between items-center">
           <div className="flex items-center space-x-2">
             {icon}
-            <h3 className="font-bold text-slate-800 text-base">{title}</h3>
+            <h3 className="font-bold text-ink text-base">{title}</h3>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600"
+            className="text-ink-soft hover:text-ink"
           >
             <X className="w-5 h-5" />
           </button>
