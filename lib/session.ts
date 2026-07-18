@@ -3,11 +3,16 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import type { Role } from "@prisma/client";
 
-const secretKey = process.env.SESSION_SECRET;
-if (!secretKey) {
-  throw new Error("SESSION_SECRET belum di-set di environment variables.");
+// Read lazily (not at module load) so `next build`'s page-data-collection step
+// can import this module without SESSION_SECRET present — it's a runtime-only
+// secret (see docker-compose.yml), never baked into the build.
+function getEncodedKey() {
+  const secretKey = process.env.SESSION_SECRET;
+  if (!secretKey) {
+    throw new Error("SESSION_SECRET belum di-set di environment variables.");
+  }
+  return new TextEncoder().encode(secretKey);
 }
-const encodedKey = new TextEncoder().encode(secretKey);
 
 const COOKIE_NAME = "sipedig_session";
 const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
@@ -22,14 +27,14 @@ export async function encrypt(payload: SessionPayload) {
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("7d")
-    .sign(encodedKey);
+    .sign(getEncodedKey());
 }
 
 export async function decrypt(
   session: string | undefined = ""
 ): Promise<SessionPayload | null> {
   try {
-    const { payload } = await jwtVerify(session, encodedKey, {
+    const { payload } = await jwtVerify(session, getEncodedKey(), {
       algorithms: ["HS256"],
     });
     return payload as unknown as SessionPayload;
