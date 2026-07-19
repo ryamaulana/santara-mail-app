@@ -1,9 +1,23 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Download, Table as TableIcon, Save, AlertTriangle, ChevronDown, ChevronRight, CheckCircle2, FileText, LayoutList } from 'lucide-react';
+import { Download, Table as TableIcon, Save, AlertTriangle, ChevronDown, ChevronRight, CheckCircle2, FileText, LayoutList, MessageSquare, FileDown, Archive } from 'lucide-react';
 import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
+import { format } from 'date-fns';
+import { id as localeId } from 'date-fns/locale';
 import { useSipedigStore } from '@/store/useSipedigStore';
 import { useRouter } from 'next/navigation';
+import SuratTemplate, { PAPER_SIZES, PaperSizeKey, SuratTemplateData } from '@/app/components/SuratTemplate';
+import { exportSuratToPdf, exportSuratListToZip } from '@/lib/exportPdf';
+
+const EMPTY_PROFIL = {
+  nama_instansi: '',
+  nama_dinas: '',
+  alamat: '',
+  telepon: '',
+  email: '',
+  kode_pos: '',
+  website: '',
+};
 
 interface ExtractedItem {
   jenis_surat?: string; // masuk | keluar
@@ -17,6 +31,12 @@ interface ExtractedItem {
   draf_balasan: string;
   fileName?: string;
   timestamp?: string;
+  // Konfigurasi draf surat balasan (editable per item)
+  balasanNomor?: string;
+  balasanPaperSize?: PaperSizeKey;
+  balasanTtdNama?: string;
+  balasanTtdJabatan?: string;
+  balasanTtdNip?: string;
 }
 
 interface BulkValidationTableProps {
@@ -25,14 +45,76 @@ interface BulkValidationTableProps {
 
 export default function BulkValidationTable({ initialData }: BulkValidationTableProps) {
   const router = useRouter();
-  const { addSuratMasuk, addSuratKeluar, suratMasuk, suratKeluar } = useSipedigStore();
+  const { addSuratMasuk, addSuratKeluar, suratMasuk, suratKeluar, profil: fetchedProfil } = useSipedigStore();
+  const profil = fetchedProfil ?? EMPTY_PROFIL;
 
   const [data, setData] = useState<ExtractedItem[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
+  const [exportingIndex, setExportingIndex] = useState<number | null>(null);
+  const [isBulkExporting, setIsBulkExporting] = useState(false);
+  const [balasanExpanded, setBalasanExpanded] = useState(false);
 
   useEffect(() => {
-    setData(initialData.map(item => ({ ...item, jenis_surat: 'masuk' })));
+    setData(initialData.map(item => ({
+      ...item,
+      jenis_surat: 'masuk',
+      balasanNomor: '-',
+      balasanPaperSize: 'A4',
+      balasanTtdNama: '',
+      balasanTtdJabatan: '',
+      balasanTtdNip: '',
+    })));
   }, [initialData]);
+
+  const buildBalasanData = (item: ExtractedItem): SuratTemplateData => ({
+    jenisSurat: 'Surat Balasan',
+    nomorSurat: item.balasanNomor || '-',
+    tanggalFormatted: format(new Date(), 'd MMMM yyyy', { locale: localeId }),
+    lampiran: '-',
+    hal: `Balasan: ${item.perihal || 'Surat Diterima'}`,
+    penerimaNama: item.pengirim || '-',
+    penerimaJabatan: '',
+    isiSurat: item.draf_balasan || 'Tidak ada saran balasan tersedia untuk surat ini.',
+    penutupSurat: '',
+    ttdNama: item.balasanTtdNama || '',
+    ttdJabatan: item.balasanTtdJabatan || '',
+    ttdNip: item.balasanTtdNip || '',
+  });
+
+  const handleDownloadItemPdf = async (index: number) => {
+    if (exportingIndex !== null) return;
+    setExportingIndex(index);
+    try {
+      const item = data[index];
+      await exportSuratToPdf(
+        buildBalasanData(item),
+        profil,
+        item.balasanPaperSize || 'A4',
+        `Balasan-${item.nomor_surat || index + 1}.pdf`
+      );
+    } catch (error) {
+      Swal.fire({ icon: 'error', title: 'Gagal membuat PDF', text: 'Terjadi kesalahan saat membuat berkas PDF. Silakan coba lagi.' });
+    } finally {
+      setExportingIndex(null);
+    }
+  };
+
+  const handleDownloadAllPdf = async () => {
+    if (isBulkExporting || data.length === 0) return;
+    setIsBulkExporting(true);
+    try {
+      const items = data.map((item, index) => ({
+        data: buildBalasanData(item),
+        paperSize: item.balasanPaperSize || 'A4',
+        filename: `Balasan-${item.nomor_surat || index + 1}.pdf`,
+      }));
+      await exportSuratListToZip(items, profil, 'Draf-Balasan-Semua-Surat.zip');
+    } catch (error) {
+      Swal.fire({ icon: 'error', title: 'Gagal membuat ZIP', text: 'Terjadi kesalahan saat membuat berkas ZIP. Silakan coba lagi.' });
+    } finally {
+      setIsBulkExporting(false);
+    }
+  };
 
   const handleCellChange = (index: number, field: keyof ExtractedItem, value: string) => {
     const newData = [...data];
@@ -143,6 +225,14 @@ export default function BulkValidationTable({ initialData }: BulkValidationTable
           >
             <Download className="w-4 h-4" />
             Ekspor ke Excel (XLSX)
+          </button>
+          <button
+            onClick={handleDownloadAllPdf}
+            disabled={isBulkExporting}
+            className="px-5 py-2.5 bg-[#2D3192] hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors shadow-md flex items-center gap-2"
+          >
+            <Archive className="w-4 h-4" />
+            {isBulkExporting ? 'Membuat ZIP...' : 'Unduh Semua Balasan (ZIP)'}
           </button>
         </div>
       </div>
@@ -327,6 +417,99 @@ export default function BulkValidationTable({ initialData }: BulkValidationTable
                   placeholder="Ringkasan isi surat..."
                   className="w-full p-3 text-sm text-ink bg-background border border-border focus:bg-surface focus:ring-2 focus:ring-primary-500 focus:border-transparent rounded-xl outline-none resize-y transition-all"
                 />
+              </div>
+
+              {/* Draf Surat Balasan */}
+              <div className="mb-8 border border-border rounded-2xl overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setBalasanExpanded((prev) => !prev)}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-background hover:bg-primary-50/50 transition-colors"
+                >
+                  <span className="flex items-center gap-2 text-sm font-semibold text-ink">
+                    <MessageSquare className="w-4 h-4 text-primary-600" />
+                    Draf Surat Balasan
+                  </span>
+                  <ChevronDown className={`w-4 h-4 text-ink-soft transition-transform ${balasanExpanded ? 'rotate-180' : ''}`} />
+                </button>
+
+                {balasanExpanded && (
+                  <div className="p-4 border-t border-border space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-ink-soft mb-1">Nomor Balasan</label>
+                        <input
+                          type="text"
+                          value={selectedItem.balasanNomor || ''}
+                          onChange={(e) => handleCellChange(selectedIndex, 'balasanNomor', e.target.value)}
+                          className="w-full p-2.5 text-sm text-ink bg-background border border-border rounded-xl outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-ink-soft mb-1">Ukuran Kertas</label>
+                        <select
+                          value={selectedItem.balasanPaperSize || 'A4'}
+                          onChange={(e) => handleCellChange(selectedIndex, 'balasanPaperSize', e.target.value)}
+                          className="w-full p-2.5 text-sm text-ink bg-background border border-border rounded-xl outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                        >
+                          {(Object.keys(PAPER_SIZES) as PaperSizeKey[]).map((key) => (
+                            <option key={key} value={key}>{PAPER_SIZES[key].label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-ink-soft mb-1">Nama Penandatangan</label>
+                        <input
+                          type="text"
+                          placeholder="Nama pejabat TTD"
+                          value={selectedItem.balasanTtdNama || ''}
+                          onChange={(e) => handleCellChange(selectedIndex, 'balasanTtdNama', e.target.value)}
+                          className="w-full p-2.5 text-sm text-ink bg-background border border-border rounded-xl outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-ink-soft mb-1">Jabatan TTD</label>
+                        <input
+                          type="text"
+                          placeholder="Jabatan pejabat TTD"
+                          value={selectedItem.balasanTtdJabatan || ''}
+                          onChange={(e) => handleCellChange(selectedIndex, 'balasanTtdJabatan', e.target.value)}
+                          className="w-full p-2.5 text-sm text-ink bg-background border border-border rounded-xl outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-semibold text-ink-soft mb-1">NIP Penandatangan</label>
+                        <input
+                          type="text"
+                          placeholder="NIP (opsional)"
+                          value={selectedItem.balasanTtdNip || ''}
+                          onChange={(e) => handleCellChange(selectedIndex, 'balasanTtdNip', e.target.value)}
+                          className="w-full p-2.5 text-sm text-ink bg-background border border-border rounded-xl outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handleDownloadItemPdf(selectedIndex)}
+                      disabled={exportingIndex !== null}
+                      className="w-full py-2.5 bg-[#2D3192] hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors shadow-md flex items-center justify-center gap-2 text-sm"
+                    >
+                      <FileDown className="w-4 h-4" />
+                      {exportingIndex === selectedIndex ? 'Membuat PDF...' : 'Unduh PDF Balasan'}
+                    </button>
+
+                    <div className="w-full overflow-x-auto bg-background rounded-2xl border border-border p-4 flex justify-center">
+                      <SuratTemplate
+                        paperSize={selectedItem.balasanPaperSize || 'A4'}
+                        profil={profil}
+                        data={buildBalasanData(selectedItem)}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Navigation Footer */}
