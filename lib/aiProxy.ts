@@ -6,6 +6,13 @@ export function getFastApiBase() {
   return baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
 }
 
+/** Shared secret sent to the FastAPI backend so it can reject calls that
+ * didn't come from this app (see santara-mail-api/app/api/deps.py). */
+export function getFastApiHeaders(): HeadersInit {
+  const key = process.env.INTERNAL_API_KEY;
+  return key ? { 'X-Internal-Api-Key': key } : {};
+}
+
 export interface QuotaStatus {
   allowed: boolean;
   used: number;

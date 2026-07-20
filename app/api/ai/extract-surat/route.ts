@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
 import { calculateCostUsd, getPricingSettings } from '@/lib/pricing';
-import { getFastApiBase, checkQuota, checkAiAccess, quotaExceededMessage } from '@/lib/aiProxy';
+import { getFastApiBase, getFastApiHeaders, checkQuota, checkAiAccess, quotaExceededMessage } from '@/lib/aiProxy';
 
 export async function POST(request: Request) {
   const user = await getCurrentUser();
@@ -28,6 +28,7 @@ export async function POST(request: Request) {
 
     const fastApiRes = await fetch(`${getFastApiBase()}/extract-surat`, {
       method: 'POST',
+      headers: getFastApiHeaders(),
       body: formData,
     });
     const data = await fastApiRes.json();

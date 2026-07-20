@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
 import { calculateCostUsd, getPricingSettings } from '@/lib/pricing';
-import { getFastApiBase } from '@/lib/aiProxy';
+import { getFastApiBase, getFastApiHeaders } from '@/lib/aiProxy';
 
 export async function GET(request: Request, props: { params: Promise<{ batchId: string }> }) {
   const user = await getCurrentUser();
@@ -16,7 +16,9 @@ export async function GET(request: Request, props: { params: Promise<{ batchId: 
   const { batchId } = await props.params;
 
   try {
-    const fastApiRes = await fetch(`${getFastApiBase()}/batch-status/${batchId}`);
+    const fastApiRes = await fetch(`${getFastApiBase()}/batch-status/${batchId}`, {
+      headers: getFastApiHeaders(),
+    });
     const data = await fastApiRes.json();
 
     if (fastApiRes.ok && Array.isArray(data.results)) {

@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint-and-build:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://user:password@localhost:5432/db?schema=public
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      SESSION_SECRET: ci_placeholder_secret_not_for_production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npx prisma generate
+
+      # Non-blocking for now: the codebase has pre-existing lint findings
+      # unrelated to any single change. Surfaced here for visibility without
+      # blocking merges until they're cleaned up separately.
+      - run: npm run lint
+        continue-on-error: true
+
+      - run: npm run build

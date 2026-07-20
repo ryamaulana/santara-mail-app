@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
-import { getFastApiBase, checkQuota, checkAiAccess, quotaExceededMessage } from '@/lib/aiProxy';
+import { getFastApiBase, getFastApiHeaders, checkQuota, checkAiAccess, quotaExceededMessage } from '@/lib/aiProxy';
 
 export async function POST(request: Request) {
   const user = await getCurrentUser();
@@ -26,6 +26,7 @@ export async function POST(request: Request) {
 
     const fastApiRes = await fetch(`${getFastApiBase()}/batch-extract`, {
       method: 'POST',
+      headers: getFastApiHeaders(),
       body: formData,
     });
     const data = await fastApiRes.json();

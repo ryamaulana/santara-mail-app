@@ -49,7 +49,12 @@ export async function PUT(request: Request, props: { params: Promise<{ id: strin
     } = {};
     if (typeof body.isActive === 'boolean') data.isActive = body.isActive;
     if (body.name) data.name = body.name;
-    if (body.password) data.passwordHash = await hashPassword(body.password);
+    if (body.password) {
+      if (body.password.length < 8) {
+        return NextResponse.json({ error: 'Password minimal 8 karakter' }, { status: 400 });
+      }
+      data.passwordHash = await hashPassword(body.password);
+    }
     if (typeof body.aiEnabled === 'boolean') data.aiEnabled = body.aiEnabled;
     if ('monthlyQuota' in body) {
       if (body.monthlyQuota === null) {

@@ -39,6 +39,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (password.length < 8) {
+      return NextResponse.json(
+        { error: 'Password minimal 8 karakter' },
+        { status: 400 }
+      );
+    }
+
     const passwordHash = await hashPassword(password);
     const user = await prisma.user.create({
       data: {
