@@ -26,7 +26,7 @@ export interface SuratTemplateData {
 
 interface SuratTemplateProps {
   data: SuratTemplateData;
-  profil: Profil | { nama_instansi: string; nama_dinas: string; alamat: string; telepon: string; email: string; kode_pos: string; website: string };
+  profil: Profil | { nama_instansi: string; nama_dinas: string; alamat: string; telepon: string; email: string; kode_pos: string; website: string; logo_url?: string | null };
   paperSize: PaperSizeKey;
 }
 
@@ -44,8 +44,13 @@ export default function SuratTemplate({ data, profil, paperSize }: SuratTemplate
       <div>
         {/* Kop Surat */}
         <div className="flex items-center justify-between border-b-4 border-double border-black pb-5 gap-6">
-          <div className="w-16 h-16 sm:w-24 sm:h-24 border-[3px] border-black rounded-lg flex items-center justify-center shrink-0 shadow-sm">
-            <span className="text-[10px] sm:text-xs font-sans font-black text-center">LOGO<br/>DAERAH</span>
+          <div className="w-16 h-16 sm:w-24 sm:h-24 border-[3px] border-black rounded-lg flex items-center justify-center shrink-0 shadow-sm overflow-hidden bg-white">
+            {profil.logo_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={`/${profil.logo_url}`} alt="Logo" className="w-full h-full object-contain" />
+            ) : (
+              <span className="text-[10px] sm:text-xs font-sans font-black text-center">LOGO<br/>DAERAH</span>
+            )}
           </div>
           <div className="text-center flex-1">
             <h2 className="text-sm sm:text-lg font-bold font-sans tracking-widest leading-tight uppercase text-gray-800">{profil.nama_instansi}</h2>

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getCurrentUser, hashPassword } from '@/lib/auth';
+import { logAdminAction } from '@/lib/auditLog';
 
 export async function GET() {
   const currentUser = await getCurrentUser();
@@ -47,6 +48,14 @@ export async function POST(request: Request) {
         role: role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : 'USER',
       },
       select: { id: true, username: true, name: true, role: true, isActive: true, createdAt: true },
+    });
+
+    await logAdminAction({
+      adminId: currentUser.id,
+      action: 'user.create',
+      targetType: 'User',
+      targetId: user.id,
+      details: { username: user.username, role: user.role },
     });
 
     return NextResponse.json(user, { status: 201 });

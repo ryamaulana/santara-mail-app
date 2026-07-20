@@ -7,6 +7,7 @@ export interface Profil {
   email: string;
   kode_pos: string;
   website: string;
+  logo_url?: string | null;
 }
 
 export interface SuratMasuk {

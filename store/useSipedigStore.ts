@@ -10,6 +10,7 @@ interface SipedigState {
   // Data fetching
   fetchProfil: () => Promise<void>;
   updateProfil: (profil: Profil) => Promise<void>;
+  setProfil: (profil: Profil) => void;
   fetchSuratMasuk: () => Promise<void>;
   fetchSuratKeluar: () => Promise<void>;
   
@@ -53,6 +54,8 @@ export const useSipedigStore = create<SipedigState>()(
         const updated = await res.json();
         set({ profil: updated });
       },
+
+      setProfil: (profil) => set({ profil }),
 
       fetchSuratMasuk: async () => {
         try {

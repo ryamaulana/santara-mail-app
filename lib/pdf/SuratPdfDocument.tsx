@@ -1,4 +1,4 @@
-import { Document, Page, View, Text, StyleSheet } from '@react-pdf/renderer';
+import { Document, Page, View, Text, Image, StyleSheet } from '@react-pdf/renderer';
 import { PAPER_SIZES, PaperSizeKey, SuratTemplateData } from '@/app/components/SuratTemplate';
 import { Profil } from '@/types';
 
@@ -35,6 +35,11 @@ const styles = StyleSheet.create({
     fontFamily: 'Helvetica-Bold',
     fontSize: 7,
     textAlign: 'center',
+  },
+  logoImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'contain',
   },
   kopTextWrap: {
     flex: 1,
@@ -160,7 +165,7 @@ const styles = StyleSheet.create({
 
 interface SuratPdfDocumentProps {
   data: SuratTemplateData;
-  profil: Profil | { nama_instansi: string; nama_dinas: string; alamat: string; telepon: string; email: string; kode_pos: string; website: string };
+  profil: Profil | { nama_instansi: string; nama_dinas: string; alamat: string; telepon: string; email: string; kode_pos: string; website: string; logo_url?: string | null };
   paperSize: PaperSizeKey;
 }
 
@@ -173,7 +178,11 @@ export default function SuratPdfDocument({ data, profil, paperSize }: SuratPdfDo
       <Page size={pageSize} style={styles.page}>
         <View style={styles.kop}>
           <View style={styles.logoBox}>
-            <Text style={styles.logoText}>LOGO{'\n'}DAERAH</Text>
+            {profil.logo_url ? (
+              <Image src={`/${profil.logo_url}`} style={styles.logoImage} />
+            ) : (
+              <Text style={styles.logoText}>LOGO{'\n'}DAERAH</Text>
+            )}
           </View>
           <View style={styles.kopTextWrap}>
             <Text style={styles.namaInstansi}>{profil.nama_instansi}</Text>

@@ -1,7 +1,7 @@
 import { PaperSizeKey, SuratTemplateData } from '@/app/components/SuratTemplate';
 import { Profil } from '@/types';
 
-type ProfilLike = Profil | { nama_instansi: string; nama_dinas: string; alamat: string; telepon: string; email: string; kode_pos: string; website: string };
+type ProfilLike = Profil | { nama_instansi: string; nama_dinas: string; alamat: string; telepon: string; email: string; kode_pos: string; website: string; logo_url?: string | null };
 
 /**
  * Build a PDF with real (selectable/searchable) text, sized exactly to the

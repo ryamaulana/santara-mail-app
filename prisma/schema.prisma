@@ -15,6 +15,7 @@ model Profil {
   email         String?
   kode_pos      String?
   website       String?
+  logo_url      String?
 }
 
 enum ProcessingStatus {
@@ -36,11 +37,16 @@ model User {
   name         String
   role         Role     @default(USER)
   isActive     Boolean  @default(true)
+  monthlyQuota Int? // null = tanpa batas. Batas jumlah request AI Reader per bulan kalender.
+  aiEnabled    Boolean  @default(true) // gate akses AI Reader, terpisah dari monthlyQuota
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  suratMasuk  SuratMasuk[]
-  suratKeluar SuratKeluar[]
+  suratMasuk     SuratMasuk[]
+  suratKeluar    SuratKeluar[]
+  usageLogs      UsageLog[]
+  billingRecords BillingRecord[]
+  adminAuditLogs AdminAuditLog[]
 }
 
 model SuratMasuk {
@@ -98,4 +104,66 @@ model SuratKeluar {
   updatedAt     DateTime  @updatedAt
 
   @@index([userId])
+}
+
+model UsageLog {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  requestKey String   @unique // idempotency key: uuid utk single call, `${batchId}:${index}` utk item batch
+  endpoint   String // "extract-surat" | "batch-extract"
+  model      String // mis. "llama-3.1-8b-instant"
+  tokensIn   Int
+  tokensOut  Int
+  costUsd    Float // estimasi biaya, bukan angka akuntansi
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model PricingSettings {
+  id                   Int      @id @default(1)
+  groqInputPerMillion  Float    @default(0.05)
+  groqOutputPerMillion Float    @default(0.08)
+  marginPercent        Float    @default(30)
+  dailySpendAlertUsd   Float? // null = alert nonaktif
+  monthlySpendAlertUsd Float? // null = alert nonaktif
+  updatedAt            DateTime @updatedAt
+  updatedBy            String? // username admin yang terakhir ubah
+}
+
+model BillingRecord {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  periodStart   DateTime // tanggal 1 bulan tsb, 00:00
+  periodEnd     DateTime // eksklusif (awal bulan berikutnya)
+  costUsd       Float // sum UsageLog.costUsd periode itu, snapshot saat dibuat
+  marginPercent Float // margin % yang dipakai saat itu (snapshot; histori tidak berubah kalau margin diubah nanti)
+  amountUsd     Float // costUsd * (1 + marginPercent/100) — yang ditagih
+  isPaid        Boolean   @default(false)
+  paidAt        DateTime?
+  markedBy      String? // username admin yang menandai lunas
+  buktiBayar           String? // path relatif ke public/, mis. "uploads/<uuid>.<ext>"
+  buktiBayarUploadedAt DateTime?
+  buktiBayarUploadedBy String? // username admin yang upload
+  createdAt     DateTime  @default(now())
+
+  @@unique([userId, periodStart])
+  @@index([userId])
+}
+
+model AdminAuditLog {
+  id         String   @id @default(uuid())
+  adminId    String
+  admin      User     @relation(fields: [adminId], references: [id])
+  action     String // "user.create" | "user.update" | "pricing.update" | "billing.mark_paid" | "billing.mark_unpaid"
+  targetType String? // "User" | "PricingSettings" | "BillingRecord"
+  targetId   String?
+  details    Json? // { changes: { field: { before, after } } } atau ringkasan relevan — tidak pernah berisi password/hash asli
+  createdAt  DateTime @default(now())
+
+  @@index([adminId])
+  @@index([createdAt])
 }

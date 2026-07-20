@@ -13,6 +13,8 @@ import {
   LogOut,
   X,
   Bot,
+  Gauge,
+  ScrollText,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -35,10 +37,14 @@ export function Sidebar({
   const userName = user?.name ?? '...';
   const userLabel = user?.username ?? '';
 
-  // Super admin only manages accounts — it never touches surat, so its
-  // sidebar is limited to the one page it's allowed to use.
+  // Super admin only manages accounts & AI usage — it never touches surat,
+  // so its sidebar is limited to the pages it's allowed to use.
   const menuItems = isAdmin
-    ? [{ name: 'Manajemen Pengguna', href: '/admin/users', icon: Users }]
+    ? [
+        { name: 'Manajemen Pengguna', href: '/admin/users', icon: Users },
+        { name: 'Log Aktivitas Admin', href: '/admin/audit-log', icon: ScrollText },
+        { name: 'Pemakaian AI', href: '/admin/usage', icon: Gauge },
+      ]
     : [
         { name: 'Dashboard', href: '/', icon: LayoutDashboard },
         {

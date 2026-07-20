@@ -16,11 +16,6 @@ const BATCH_STORAGE_KEY = 'sipedig_batch_progress';
 type StoredBatch = { batchId: string; total: number };
 type ResumePrompt = { batchId: string; total: number; completed: number };
 
-function getApiBase() {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-  return baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
-}
-
 export default function AIReaderPage() {
   const [appState, setAppState] = useState<'upload' | 'loading' | 'success' | 'history'>('upload');
   const [extractedDataList, setExtractedDataList] = useState<any[]>([]);
@@ -49,7 +44,7 @@ export default function AIReaderPage() {
       return;
     }
 
-    fetch(`${getApiBase()}/batch-status/${stored.batchId}`)
+    fetch(`/api/ai/batch-status/${stored.batchId}`)
       .then(async (res) => {
         if (!res.ok) {
           // Batch sudah tidak dikenal server (mis. server sempat restart) — tidak ada yang bisa dilanjutkan.
@@ -68,16 +63,15 @@ export default function AIReaderPage() {
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append('file', file);
-      const fetchUrl = `${getApiBase()}/extract-surat`;
 
-      const response = await fetch(fetchUrl, {
+      const response = await fetch('/api/ai/extract-surat', {
         method: 'POST',
         body: formData,
       });
 
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.detail || 'Terjadi kesalahan saat memproses gambar.');
+        throw new Error(data.error || data.detail || 'Terjadi kesalahan saat memproses gambar.');
       }
       return {
         ...(data.parsed_data || {}),
@@ -103,10 +97,10 @@ export default function AIReaderPage() {
 
   const pollBatchStatus = async (batchId: string): Promise<any> => {
     while (true) {
-      const res = await fetch(`${getApiBase()}/batch-status/${batchId}`);
+      const res = await fetch(`/api/ai/batch-status/${batchId}`);
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.detail || 'Gagal mengambil status pemrosesan batch.');
+        throw new Error(data.error || data.detail || 'Gagal mengambil status pemrosesan batch.');
       }
 
       setTotalFiles(data.total);
@@ -183,13 +177,13 @@ export default function AIReaderPage() {
       const formData = new FormData();
       files.forEach((file) => formData.append('files', file));
 
-      const uploadRes = await fetch(`${getApiBase()}/batch-extract`, {
+      const uploadRes = await fetch('/api/ai/batch-extract', {
         method: 'POST',
         body: formData,
       });
       const uploadData = await uploadRes.json();
       if (!uploadRes.ok) {
-        throw new Error(uploadData.detail || 'Gagal mengunggah berkas untuk diproses.');
+        throw new Error(uploadData.error || uploadData.detail || 'Gagal mengunggah berkas untuk diproses.');
       }
       batchId = uploadData.batch_id;
     } catch (error: any) {

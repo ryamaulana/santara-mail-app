@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { Plus, KeyRound, Power, Users as UsersIcon, ShieldCheck } from "lucide-react";
+import { Plus, KeyRound, Power, Users as UsersIcon } from "lucide-react";
 import Swal from "sweetalert2";
 
 type AdminUser = {
@@ -54,7 +54,7 @@ export default function AdminUsersPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, ...payload }: { id: string } & Partial<Pick<AdminUser, "isActive" | "role">> & { password?: string }) => {
+    mutationFn: async ({ id, ...payload }: { id: string } & Partial<Pick<AdminUser, "isActive">> & { password?: string }) => {
       const res = await fetch(`/api/admin/users/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -114,21 +114,6 @@ export default function AdminUsersPage() {
       updateMutation.mutate({ id: u.id, password } as any);
       Swal.fire({ icon: "success", title: "Password diperbarui", timer: 1500, showConfirmButton: false });
     }
-  };
-
-  const handleToggleRole = (u: AdminUser) => {
-    const nextRole = u.role === "SUPER_ADMIN" ? "USER" : "SUPER_ADMIN";
-    Swal.fire({
-      title: `Jadikan ${u.name} sebagai ${nextRole === "SUPER_ADMIN" ? "Super Admin" : "User biasa"}?`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Ya, ubah",
-      cancelButtonText: "Batal",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        updateMutation.mutate({ id: u.id, role: nextRole });
-      }
-    });
   };
 
   if (isLoadingSession) {
@@ -206,29 +191,26 @@ export default function AdminUsersPage() {
                       </Badge>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center justify-center space-x-2">
-                        <button
-                          onClick={() => handleResetPassword(u)}
-                          className="p-1.5 text-ink-soft hover:text-primary-600 hover:bg-primary-50 rounded"
-                          title="Reset Password"
-                        >
-                          <KeyRound className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleToggleRole(u)}
-                          className="p-1.5 text-ink-soft hover:text-warning hover:bg-warning-bg rounded"
-                          title={u.role === "SUPER_ADMIN" ? "Jadikan User biasa" : "Jadikan Super Admin"}
-                        >
-                          <ShieldCheck className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleToggleActive(u)}
-                          className="p-1.5 text-ink-soft hover:text-danger hover:bg-danger-bg rounded"
-                          title={u.isActive ? "Nonaktifkan" : "Aktifkan"}
-                        >
-                          <Power className="w-4 h-4" />
-                        </button>
-                      </div>
+                      {u.id === currentUser?.id ? (
+                        <div className="text-center text-[11px] text-ink-soft italic">Tidak tersedia untuk akun sendiri</div>
+                      ) : (
+                        <div className="flex items-center justify-center space-x-2">
+                          <button
+                            onClick={() => handleResetPassword(u)}
+                            className="p-1.5 text-ink-soft hover:text-primary-600 hover:bg-primary-50 rounded"
+                            title="Reset Password"
+                          >
+                            <KeyRound className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleToggleActive(u)}
+                            className="p-1.5 text-ink-soft hover:text-danger hover:bg-danger-bg rounded"
+                            title={u.isActive ? "Nonaktifkan" : "Aktifkan"}
+                          >
+                            <Power className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))
