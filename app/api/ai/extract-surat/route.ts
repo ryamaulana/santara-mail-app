@@ -25,6 +25,7 @@ export async function POST(request: Request) {
 
   try {
     const formData = await request.formData();
+    formData.append('user_id', user.id);
 
     const fastApiRes = await fetch(`${getFastApiBase()}/extract-surat`, {
       method: 'POST',

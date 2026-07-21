@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Search, Filter, Plus, FileText, Trash2, Paperclip, Edit3, Save, ExternalLink } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Modal } from "@/components/ui/Modal";
+import { ImageLightbox } from "@/components/ui/ImageLightbox";
+import { resolveDocumentSrc } from "@/lib/documentUrl";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
@@ -23,6 +25,7 @@ export default function SuratKeluarPage() {
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedSuratId, setSelectedSuratId] = useState<string | null>(null);
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
 
   // New form state
   const [newForm, setNewForm] = useState({
@@ -131,6 +134,7 @@ export default function SuratKeluarPage() {
   };
 
   const selectedSuratData = suratKeluar.find((x) => x.id === selectedSuratId);
+  const selectedFileSrc = selectedSuratData?.file_surat ? resolveDocumentSrc(selectedSuratData.file_surat) : null;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -397,12 +401,17 @@ export default function SuratKeluarPage() {
                     <div className="w-full">
                       <p className="text-sm font-bold text-ink mb-2">Pratinjau Berkas Fisik Digital</p>
                       {selectedSuratData.file_surat.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? (
-                        <img src={selectedSuratData.file_surat} alt="Preview" className="w-full h-auto rounded border border-border" />
+                        <img
+                          src={selectedFileSrc!}
+                          alt="Preview"
+                          onClick={() => setLightboxSrc(selectedFileSrc)}
+                          className="w-full h-auto rounded border border-border cursor-zoom-in hover:opacity-90 transition"
+                        />
                       ) : (
                         <div className="p-4 bg-surface border border-border rounded flex flex-col items-center">
                           <FileText className="w-8 h-8 text-accent-600 mb-2" />
                           <p className="text-xs text-ink-soft font-semibold truncate max-w-full">{selectedSuratData.file_surat}</p>
-                          <a href={selectedSuratData.file_surat} target="_blank" rel="noopener noreferrer" className="mt-2 px-4 py-1.5 bg-accent-50 text-accent-700 hover:bg-accent-100 rounded-md font-semibold text-xs border border-accent-100">Buka / Unduh Berkas</a>
+                          <a href={selectedFileSrc!} target="_blank" rel="noopener noreferrer" className="mt-2 px-4 py-1.5 bg-accent-50 text-accent-700 hover:bg-accent-100 rounded-md font-semibold text-xs border border-accent-100">Buka / Unduh Berkas</a>
                         </div>
                       )}
                     </div>
@@ -451,6 +460,10 @@ export default function SuratKeluarPage() {
           </div>
         )}
       </Modal>
+
+      {lightboxSrc && (
+        <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
+      )}
     </div>
   );
 }

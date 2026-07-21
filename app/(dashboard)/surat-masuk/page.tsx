@@ -4,6 +4,8 @@ import { useSipedigStore } from "@/store/useSipedigStore";
 import { Badge } from "@/components/ui/Badge";
 import { Search, Filter, Plus, FileText, Trash2, Paperclip, Save } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
+import { ImageLightbox } from "@/components/ui/ImageLightbox";
+import { resolveDocumentSrc } from "@/lib/documentUrl";
 import { format } from "date-fns";
 import Swal from "sweetalert2";
 import { useState, useEffect } from "react";
@@ -21,6 +23,7 @@ export default function SuratMasukPage() {
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedSuratId, setSelectedSuratId] = useState<string | null>(null);
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
 
   // New form state
   const [newForm, setNewForm] = useState({
@@ -133,6 +136,7 @@ export default function SuratMasukPage() {
   };
 
   const selectedSuratData = suratMasuk.find((x) => x.id === selectedSuratId);
+  const selectedFileSrc = selectedSuratData?.file_surat ? resolveDocumentSrc(selectedSuratData.file_surat) : null;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -420,9 +424,10 @@ export default function SuratMasukPage() {
                         <div className="w-full flex flex-col items-center">
                           <div className="w-full flex-1 overflow-auto bg-background rounded border border-border p-2 flex items-center justify-center">
                             <img
-                              src={selectedSuratData.file_surat.startsWith('http') || selectedSuratData.file_surat.startsWith('/') ? selectedSuratData.file_surat : `/${selectedSuratData.file_surat}`}
+                              src={selectedFileSrc!}
                               alt="Preview"
-                              className="max-w-full max-h-full object-contain"
+                              onClick={() => setLightboxSrc(selectedFileSrc)}
+                              className="max-w-full max-h-full object-contain cursor-zoom-in hover:opacity-90 transition"
                             />
                           </div>
                           <p className="mt-2 text-xs font-mono text-ink-soft break-all text-center">Path: {selectedSuratData.file_surat}</p>
@@ -431,7 +436,7 @@ export default function SuratMasukPage() {
                         <div className="p-4 bg-surface border border-border rounded flex flex-col items-center w-full">
                           <FileText className="w-8 h-8 text-primary-600 mb-2" />
                           <p className="text-xs text-ink-soft font-semibold truncate max-w-full">{selectedSuratData.file_surat}</p>
-                          <a href={selectedSuratData.file_surat.startsWith('http') || selectedSuratData.file_surat.startsWith('/') ? selectedSuratData.file_surat : `/${selectedSuratData.file_surat}`} target="_blank" rel="noopener noreferrer" className="mt-2 px-4 py-1.5 bg-primary-50 text-primary-700 hover:bg-primary-100 rounded-md font-semibold text-xs border border-primary-100">Buka / Unduh Berkas</a>
+                          <a href={selectedFileSrc!} target="_blank" rel="noopener noreferrer" className="mt-2 px-4 py-1.5 bg-primary-50 text-primary-700 hover:bg-primary-100 rounded-md font-semibold text-xs border border-primary-100">Buka / Unduh Berkas</a>
                         </div>
                       )}
                     </div>
@@ -469,6 +474,10 @@ export default function SuratMasukPage() {
           </div>
         )}
       </Modal>
+
+      {lightboxSrc && (
+        <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
+      )}
     </div>
   );
 }
