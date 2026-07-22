@@ -23,11 +23,69 @@ async function fetchUsers(): Promise<AdminUser[]> {
   return res.json();
 }
 
+const COPY_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>Salin`;
+const COPIED_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>Tersalin!`;
+
+function showTempPasswordAlert(title: string, username: string, tempPassword: string) {
+  Swal.fire({
+    icon: "success",
+    title,
+    html: `
+      <div class="text-left text-sm">
+        <p class="text-ink-soft mb-3">
+          Bagikan password ini ke <b class="text-ink">${username}</b>. Pengguna wajib menggantinya saat login pertama.
+        </p>
+        <button
+          type="button"
+          id="temp-password-copy"
+          class="w-full flex items-center justify-between gap-3 bg-primary-50 border-2 border-dashed border-primary-500 rounded-xl px-4 py-3 cursor-pointer hover:bg-primary-100 transition"
+        >
+          <code id="temp-password-text" class="font-mono font-bold text-base tracking-wider text-ink">${tempPassword}</code>
+          <span id="temp-password-icon" class="flex items-center gap-1.5 text-primary-600 font-semibold text-xs shrink-0">${COPY_ICON}</span>
+        </button>
+        <p class="text-[11px] text-ink-soft mt-2">Klik kotak di atas untuk menyalin. Password hanya ditampilkan sekali dan tidak dapat dilihat lagi setelah ini ditutup.</p>
+      </div>
+    `,
+    confirmButtonText: "Sudah dicatat",
+    confirmButtonColor: "#0f6e56",
+    didOpen: () => {
+      const btn = document.getElementById("temp-password-copy");
+      const iconWrap = document.getElementById("temp-password-icon");
+      let resetTimer: ReturnType<typeof setTimeout> | null = null;
+
+      btn?.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(tempPassword);
+        } catch {
+          const el = document.getElementById("temp-password-text");
+          if (el) {
+            const range = document.createRange();
+            range.selectNode(el);
+            const selection = window.getSelection();
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+            document.execCommand("copy");
+            selection?.removeAllRanges();
+          }
+        }
+
+        if (iconWrap) {
+          iconWrap.innerHTML = COPIED_ICON;
+          if (resetTimer) clearTimeout(resetTimer);
+          resetTimer = setTimeout(() => {
+            iconWrap.innerHTML = COPY_ICON;
+          }, 1500);
+        }
+      });
+    },
+  });
+}
+
 export default function AdminUsersPage() {
   const { user: currentUser, isAdmin, isLoading: isLoadingSession } = useCurrentUser();
   const queryClient = useQueryClient();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [createForm, setCreateForm] = useState({ username: "", password: "", name: "", role: "USER" as "USER" | "SUPER_ADMIN" });
+  const [createForm, setCreateForm] = useState({ username: "", name: "", role: "USER" as "USER" | "SUPER_ADMIN" });
   const [createError, setCreateError] = useState<string | null>(null);
 
   const usersQuery = useQuery({ queryKey: ["admin", "users"], queryFn: fetchUsers, enabled: isAdmin });
@@ -43,18 +101,18 @@ export default function AdminUsersPage() {
       if (!res.ok) throw new Error(data.error || "Gagal membuat pengguna");
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
       setIsCreateModalOpen(false);
-      setCreateForm({ username: "", password: "", name: "", role: "USER" });
+      setCreateForm({ username: "", name: "", role: "USER" });
       setCreateError(null);
-      Swal.fire({ icon: "success", title: "Berhasil!", text: "Pengguna baru berhasil dibuat.", timer: 2000, showConfirmButton: false });
+      showTempPasswordAlert("Pengguna berhasil dibuat", data.username, data.tempPassword);
     },
     onError: (error: Error) => setCreateError(error.message),
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, ...payload }: { id: string } & Partial<Pick<AdminUser, "isActive">> & { password?: string }) => {
+    mutationFn: async ({ id, ...payload }: { id: string } & Partial<Pick<AdminUser, "isActive">>) => {
       const res = await fetch(`/api/admin/users/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -66,6 +124,18 @@ export default function AdminUsersPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+    },
+    onError: (error: Error) => {
+      Swal.fire({ icon: "error", title: "Gagal", text: error.message });
+    },
+  });
+
+  const resetPasswordMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/admin/users/${id}/reset-password`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Gagal mereset password");
+      return data as { tempPassword: string };
     },
     onError: (error: Error) => {
       Swal.fire({ icon: "error", title: "Gagal", text: error.message });
@@ -97,22 +167,20 @@ export default function AdminUsersPage() {
   };
 
   const handleResetPassword = async (u: AdminUser) => {
-    const { value: password } = await Swal.fire({
-      title: `Reset password untuk ${u.username}`,
-      input: "password",
-      inputLabel: "Password baru",
-      inputPlaceholder: "Minimal 8 karakter",
+    const confirm = await Swal.fire({
+      title: `Reset password untuk ${u.username}?`,
+      text: "Password baru akan digenerate otomatis dan pengguna wajib menggantinya saat login berikutnya.",
+      icon: "warning",
       showCancelButton: true,
-      confirmButtonText: "Simpan",
+      confirmButtonText: "Ya, reset",
       cancelButtonText: "Batal",
-      inputValidator: (value) => {
-        if (!value || value.length < 8) return "Password minimal 8 karakter";
-        return undefined;
-      },
+      confirmButtonColor: "#dc2626",
     });
-    if (password) {
-      updateMutation.mutate({ id: u.id, password } as any);
-      Swal.fire({ icon: "success", title: "Password diperbarui", timer: 1500, showConfirmButton: false });
+    if (!confirm.isConfirmed) return;
+
+    const result = await resetPasswordMutation.mutateAsync(u.id).catch(() => null);
+    if (result) {
+      showTempPasswordAlert("Password berhasil direset", u.username, result.tempPassword);
     }
   };
 
@@ -247,16 +315,8 @@ export default function AdminUsersPage() {
               className="w-full p-2 bg-background border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary-500"
             />
           </div>
-          <div>
-            <label className="block font-semibold text-ink-soft mb-1">Password Awal</label>
-            <input
-              required
-              minLength={8}
-              type="password"
-              value={createForm.password}
-              onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
-              className="w-full p-2 bg-background border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary-500"
-            />
+          <div className="p-3 bg-background border border-border rounded-lg text-ink-soft">
+            Password sementara akan dibuat otomatis dan ditampilkan setelah pengguna disimpan. Pengguna wajib menggantinya saat login pertama.
           </div>
           <div>
             <label className="block font-semibold text-ink-soft mb-1">Role</label>

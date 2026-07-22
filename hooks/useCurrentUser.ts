@@ -9,6 +9,7 @@ export type CurrentUser = {
   name: string;
   role: "SUPER_ADMIN" | "USER";
   isActive: boolean;
+  mustChangePassword: boolean;
 };
 
 export function useCurrentUser() {

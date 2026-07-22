@@ -3,6 +3,8 @@
 import { Sidebar } from "@/components/ui/Sidebar";
 import { Header } from "@/components/ui/Header";
 import { useSipedigStore } from "@/store/useSipedigStore";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function DashboardLayout({
@@ -12,10 +14,22 @@ export default function DashboardLayout({
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const fetchProfil = useSipedigStore((state) => state.fetchProfil);
+  const { user, isLoading } = useCurrentUser();
+  const router = useRouter();
 
   useEffect(() => {
     fetchProfil();
   }, [fetchProfil]);
+
+  useEffect(() => {
+    if (!isLoading && user?.mustChangePassword) {
+      router.push("/change-password");
+    }
+  }, [isLoading, user, router]);
+
+  if (user?.mustChangePassword) {
+    return null;
+  }
 
   return (
     <div className="flex h-screen w-full bg-background text-ink overflow-hidden">

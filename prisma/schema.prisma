@@ -31,10 +31,11 @@ enum Role {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  username     String   @unique
-  passwordHash String
-  name         String
+  id                  String   @id @default(uuid())
+  username            String   @unique
+  passwordHash        String
+  mustChangePassword  Boolean  @default(false) // true saat akun dibuat/direset admin — user wajib ganti password sebelum lanjut memakai aplikasi
+  name                String
   role         Role     @default(USER)
   isActive     Boolean  @default(true)
   monthlyQuota Int? @default(200) // null = tanpa batas (admin bisa set manual ke kosong). Batas jumlah request AI Reader per bulan kalender.

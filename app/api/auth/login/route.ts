@@ -35,7 +35,13 @@ export async function POST(request: Request) {
 
     await createSession(user.id, user.role);
 
-    return NextResponse.json({ id: user.id, username: user.username, name: user.name, role: user.role });
+    return NextResponse.json({
+      id: user.id,
+      username: user.username,
+      name: user.name,
+      role: user.role,
+      mustChangePassword: user.mustChangePassword,
+    });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

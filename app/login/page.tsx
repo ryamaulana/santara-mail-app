@@ -30,7 +30,11 @@ export default function LoginPage() {
       }
 
       const data = await res.json();
-      router.push(data.role === "SUPER_ADMIN" ? "/admin/users" : "/");
+      if (data.mustChangePassword) {
+        router.push("/change-password");
+      } else {
+        router.push(data.role === "SUPER_ADMIN" ? "/admin/users" : "/");
+      }
       router.refresh();
     } catch {
       setError("Terjadi kesalahan jaringan. Coba lagi.");

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getCurrentUser, hashPassword } from '@/lib/auth';
+import { generateTempPassword } from '@/lib/generatePassword';
 import { logAdminAction } from '@/lib/auditLog';
 
 export async function GET() {
@@ -30,29 +31,24 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { username, password, name, role } = await request.json();
+    const { username, name, role } = await request.json();
 
-    if (!username || !password || !name) {
+    if (!username || !name) {
       return NextResponse.json(
-        { error: 'Username, password, dan nama wajib diisi' },
+        { error: 'Username dan nama wajib diisi' },
         { status: 400 }
       );
     }
 
-    if (password.length < 8) {
-      return NextResponse.json(
-        { error: 'Password minimal 8 karakter' },
-        { status: 400 }
-      );
-    }
-
-    const passwordHash = await hashPassword(password);
+    const tempPassword = generateTempPassword();
+    const passwordHash = await hashPassword(tempPassword);
     const user = await prisma.user.create({
       data: {
         username,
         passwordHash,
         name,
         role: role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : 'USER',
+        mustChangePassword: true,
       },
       select: { id: true, username: true, name: true, role: true, isActive: true, createdAt: true },
     });
@@ -65,7 +61,7 @@ export async function POST(request: Request) {
       details: { username: user.username, role: user.role },
     });
 
-    return NextResponse.json(user, { status: 201 });
+    return NextResponse.json({ ...user, tempPassword }, { status: 201 });
   } catch (error: any) {
     if (error.code === 'P2002') {
       return NextResponse.json({ error: 'Username sudah digunakan' }, { status: 409 });

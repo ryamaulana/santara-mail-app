@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getCurrentUser, hashPassword } from '@/lib/auth';
+import { getCurrentUser } from '@/lib/auth';
 import { logAdminAction } from '@/lib/auditLog';
 
 export async function PUT(request: Request, props: { params: Promise<{ id: string }> }) {
@@ -43,18 +43,11 @@ export async function PUT(request: Request, props: { params: Promise<{ id: strin
     const data: {
       isActive?: boolean;
       name?: string;
-      passwordHash?: string;
       monthlyQuota?: number | null;
       aiEnabled?: boolean;
     } = {};
     if (typeof body.isActive === 'boolean') data.isActive = body.isActive;
     if (body.name) data.name = body.name;
-    if (body.password) {
-      if (body.password.length < 8) {
-        return NextResponse.json({ error: 'Password minimal 8 karakter' }, { status: 400 });
-      }
-      data.passwordHash = await hashPassword(body.password);
-    }
     if (typeof body.aiEnabled === 'boolean') data.aiEnabled = body.aiEnabled;
     if ('monthlyQuota' in body) {
       if (body.monthlyQuota === null) {
@@ -69,7 +62,6 @@ export async function PUT(request: Request, props: { params: Promise<{ id: strin
     const changes: Record<string, { before: unknown; after: unknown }> = {};
     if (data.isActive !== undefined && data.isActive !== target.isActive) changes.isActive = { before: target.isActive, after: data.isActive };
     if (data.name !== undefined && data.name !== target.name) changes.name = { before: target.name, after: data.name };
-    if (data.passwordHash !== undefined) changes.password = { before: '(hidden)', after: '(changed)' };
     if (data.monthlyQuota !== undefined && data.monthlyQuota !== target.monthlyQuota) changes.monthlyQuota = { before: target.monthlyQuota, after: data.monthlyQuota };
     if (data.aiEnabled !== undefined && data.aiEnabled !== target.aiEnabled) changes.aiEnabled = { before: target.aiEnabled, after: data.aiEnabled };
 
