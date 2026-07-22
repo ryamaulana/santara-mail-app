@@ -26,7 +26,16 @@ export function checkRateLimit(key: string, limit: number, windowMs: number): bo
 }
 
 export function getClientIp(request: Request): string {
-  const forwardedFor = request.headers.get('x-forwarded-for');
-  if (forwardedFor) return forwardedFor.split(',')[0].trim();
-  return request.headers.get('x-real-ip') || 'unknown';
+  // X-Real-IP diutamakan: Nginx nyetelnya langsung dari $remote_addr (koneksi
+  // TCP asli), jadi klien TIDAK BISA memalsukannya sama sekali.
+  //
+  // X-Forwarded-For sengaja TIDAK dipakai lagi meski ada — nilainya dari
+  // `$proxy_add_x_forwarded_for`, yang cuma MENAMBAHKAN IP asli ke belakang
+  // header X-Forwarded-For yang mungkin sudah dikirim klien sendiri (bukan
+  // menggantinya). Kalau kode ini ambil entri PERTAMA (dulu begitu), klien
+  // bisa kirim `X-Forwarded-For: 1.2.3.4` sendiri dan rate limit ini akan
+  // percaya "1.2.3.4" itu — melewati limit-nya sepenuhnya.
+  const realIp = request.headers.get('x-real-ip');
+  if (realIp) return realIp.trim();
+  return 'unknown';
 }
