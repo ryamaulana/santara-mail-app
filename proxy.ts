@@ -49,5 +49,10 @@ export default async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|uploads/).*)"],
+  // Selain _next/static, _next/image, favicon.ico, dan uploads/, sekarang
+  // juga mengecualikan berkas gambar statis apa pun di public/ (mis.
+  // santara-mail-logo.png) — sebelumnya file-file itu ikut kena cek sesi,
+  // jadi redirect ke /login begitu diakses TANPA login (mis. logo di
+  // halaman /login itu sendiri), padahal harusnya selalu bisa diakses bebas.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|uploads/|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico)$).*)"],
 };
