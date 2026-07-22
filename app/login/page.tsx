@@ -49,7 +49,7 @@ export default function LoginPage() {
         <div className="flex justify-center">
           <img src="/santara-mail-logo.png" alt="Santara Mail Logo" className="h-16 object-contain" />
         </div>
-        <h2 className="mt-4 text-center text-2xl font-extrabold text-white">SIPEDIG 110</h2>
+        <h2 className="mt-4 text-center text-2xl font-extrabold text-white">Santara Mail</h2>
         <p className="mt-1 text-center text-sm text-panel-ink-soft">
           Sistem Informasi Persuratan Digital Modern
         </p>

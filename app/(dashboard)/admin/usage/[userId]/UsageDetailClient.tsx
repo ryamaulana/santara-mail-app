@@ -57,12 +57,18 @@ type BillingRecord = {
   buktiBayarUploadedBy: string | null;
 };
 
+type CurrentEstimate = {
+  periodStart: string;
+  periodEnd: string;
+  costUsd: number;
+  marginPercent: number;
+  amountUsd: number;
+};
+
 type BillingHistoryResponse = {
   userId: string;
   marginPercent: number;
-  liveCostUsd: number;
-  liveAmountUsd: number;
-  currentPeriodRecord: BillingRecord | null;
+  currentEstimate: CurrentEstimate;
   history: BillingRecord[];
 };
 
@@ -180,26 +186,6 @@ export function UsageDetailClient({ userId }: { userId: string }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "usage-detail", userId] });
       queryClient.invalidateQueries({ queryKey: ["admin", "usage"] });
-    },
-    onError: (error: Error) => {
-      Swal.fire({ icon: "error", title: "Gagal", text: error.message });
-    },
-  });
-
-  const generateBillingMutation = useMutation({
-    mutationFn: async () => {
-      const res = await fetch("/api/admin/billing", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Gagal membuat tagihan");
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "billing", "user", userId] });
-      Swal.fire({ icon: "success", title: "Tagihan dibuat", timer: 1500, showConfirmButton: false });
     },
     onError: (error: Error) => {
       Swal.fire({ icon: "error", title: "Gagal", text: error.message });
@@ -327,7 +313,7 @@ export function UsageDetailClient({ userId }: { userId: string }) {
 
   const { user, stats } = detailQuery.data;
   const history = billingQuery.data?.history ?? [];
-  const currentPeriodRecord = billingQuery.data?.currentPeriodRecord ?? null;
+  const currentEstimate = billingQuery.data?.currentEstimate ?? null;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -439,22 +425,31 @@ export function UsageDetailClient({ userId }: { userId: string }) {
       <UsageLineChart granularity={granularity} timeseries={detailQuery.data.timeseries} currency={currency} usdToIdr={usdToIdr} />
 
       <div className="bg-surface rounded-xl border border-border shadow-sm p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Receipt className="w-5 h-5 text-primary-600" />
-            <h3 className="font-bold text-ink text-base">Riwayat Tagihan</h3>
-          </div>
-          {!currentPeriodRecord && (
-            <button
-              onClick={() => generateBillingMutation.mutate()}
-              disabled={generateBillingMutation.isPending}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-600 hover:bg-primary-500 disabled:opacity-60 text-white text-xs font-semibold rounded-lg transition"
-            >
-              <Receipt className="w-3.5 h-3.5" />
-              Buat Tagihan Bulan Ini
-            </button>
-          )}
+        <div className="flex items-center gap-3">
+          <Receipt className="w-5 h-5 text-primary-600" />
+          <h3 className="font-bold text-ink text-base">Riwayat Tagihan</h3>
         </div>
+
+        {currentEstimate && (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-4 rounded-xl border border-dashed border-primary-200 bg-primary-50/30">
+            <div>
+              <p className="text-xs font-bold text-ink">
+                {format(new Date(currentEstimate.periodStart), "MMMM yyyy", { locale: localeId })}
+                <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-primary-100 text-primary-700 align-middle">
+                  Estimasi — berjalan
+                </span>
+              </p>
+              <p className="text-[11px] text-ink-soft mt-1">
+                Dihitung otomatis dari pemakaian bulan ini. Jadi tagihan final begitu bulannya selesai.
+              </p>
+            </div>
+            <div className="text-right font-mono text-xs text-ink-soft">
+              <p>Biaya riil: {cost(currentEstimate.costUsd)}</p>
+              <p>Margin: {currentEstimate.marginPercent}%</p>
+              <p className="font-bold text-ink text-sm">{cost(currentEstimate.amountUsd)}</p>
+            </div>
+          </div>
+        )}
 
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[840px]">

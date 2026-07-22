@@ -16,7 +16,7 @@ export async function GET(request: Request, props: { params: Promise<{ batchId: 
   const { batchId } = await props.params;
 
   try {
-    const fastApiRes = await fetch(`${getFastApiBase()}/batch-status/${batchId}`, {
+    const fastApiRes = await fetch(`${getFastApiBase()}/batch-status/${batchId}?user_id=${encodeURIComponent(user.id)}`, {
       headers: getFastApiHeaders(),
     });
     const data = await fastApiRes.json();

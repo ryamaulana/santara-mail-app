@@ -1,7 +1,7 @@
 'use client';
 
-import { MessageSquare, Send, Copy, Save } from 'lucide-react';
-import { useState } from 'react';
+import { MessageSquare, Send, Copy, Save, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
 import Swal from 'sweetalert2';
@@ -21,12 +21,16 @@ const EMPTY_PROFIL = {
 
 interface SuggestionPanelProps {
   data: any;
-  imagePreviewUrl: string | null;
+  imagePreviewUrls: string[];
 }
 
-export default function SuggestionPanel({ data, imagePreviewUrl }: SuggestionPanelProps) {
+export default function SuggestionPanel({ data, imagePreviewUrls }: SuggestionPanelProps) {
   const { profil: fetchedProfil, addSuratKeluar } = useSipedigStore();
   const profil = fetchedProfil ?? EMPTY_PROFIL;
+
+  const [pageIndex, setPageIndex] = useState(0);
+  useEffect(() => setPageIndex(0), [imagePreviewUrls]);
+  const currentPageUrl = imagePreviewUrls[Math.min(pageIndex, imagePreviewUrls.length - 1)] ?? null;
 
   const [nomorBalasan, setNomorBalasan] = useState('-');
   const [paperSize, setPaperSize] = useState<PaperSizeKey>('A4');
@@ -208,16 +212,41 @@ export default function SuggestionPanel({ data, imagePreviewUrl }: SuggestionPan
       <div className="card rounded-3xl p-6 print:hidden">
         <h3 className="text-xs font-bold text-ink-soft mb-4 uppercase tracking-wider text-center">Referensi Dokumen Asli</h3>
         <div className="w-full bg-background rounded-2xl border border-border overflow-hidden flex items-center justify-center min-h-[200px]">
-          {imagePreviewUrl ? (
+          {currentPageUrl ? (
             <img
-              src={imagePreviewUrl}
-              alt="Pratinjau Surat"
+              src={currentPageUrl}
+              alt={`Pratinjau Surat${imagePreviewUrls.length > 1 ? ` - Halaman ${pageIndex + 1}` : ''}`}
               className="w-full h-auto object-contain max-h-64"
             />
           ) : (
             <span className="text-ink-soft text-sm">Tidak ada gambar</span>
           )}
         </div>
+        {imagePreviewUrls.length > 1 && (
+          <div className="flex items-center justify-center gap-4 mt-3">
+            <button
+              type="button"
+              onClick={() => setPageIndex((i) => Math.max(0, i - 1))}
+              disabled={pageIndex === 0}
+              className="p-1.5 rounded-lg border border-border text-ink-soft hover:bg-border/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              aria-label="Halaman sebelumnya"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span className="text-xs font-semibold text-ink-soft">
+              Halaman {pageIndex + 1} dari {imagePreviewUrls.length}
+            </span>
+            <button
+              type="button"
+              onClick={() => setPageIndex((i) => Math.min(imagePreviewUrls.length - 1, i + 1))}
+              disabled={pageIndex === imagePreviewUrls.length - 1}
+              className="p-1.5 rounded-lg border border-border text-ink-soft hover:bg-border/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              aria-label="Halaman berikutnya"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

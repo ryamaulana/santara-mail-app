@@ -65,7 +65,7 @@ export default function DashboardPage() {
         <div className="space-y-2.5">
           <div className="inline-flex items-center space-x-1.5 bg-panel-border text-panel-ink-soft px-3 py-1 rounded-full text-[10px] font-bold border border-panel-border uppercase tracking-wider">
             <span className="w-1.5 h-1.5 rounded-full bg-panel-primary"></span>
-            <span>Portal SIPEDIG 110</span>
+            <span>Portal Santara Mail</span>
           </div>
           <h3 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
             Sistem Informasi Persuratan Digital

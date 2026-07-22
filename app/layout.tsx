@@ -14,7 +14,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "SIPEDIG - Portal Persuratan Digital",
+  title: "Santara Mail - Portal Persuratan Digital",
   description: "Sistem Informasi Persuratan Digital Modern",
 };
 

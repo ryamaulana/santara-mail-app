@@ -37,7 +37,7 @@ model User {
   name         String
   role         Role     @default(USER)
   isActive     Boolean  @default(true)
-  monthlyQuota Int? // null = tanpa batas. Batas jumlah request AI Reader per bulan kalender.
+  monthlyQuota Int? @default(200) // null = tanpa batas (admin bisa set manual ke kosong). Batas jumlah request AI Reader per bulan kalender.
   aiEnabled    Boolean  @default(true) // gate akses AI Reader, terpisah dari monthlyQuota
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

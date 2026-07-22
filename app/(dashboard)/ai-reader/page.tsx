@@ -20,7 +20,7 @@ export default function AIReaderPage() {
   const [appState, setAppState] = useState<'upload' | 'loading' | 'success' | 'history'>('upload');
   const [extractedDataList, setExtractedDataList] = useState<any[]>([]);
   const [failedItems, setFailedItems] = useState<FailedItem[]>([]);
-  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Progress states
@@ -83,7 +83,13 @@ export default function AIReaderPage() {
   const splitResults = (results: any[]) => {
     const successes = results
       .filter((r) => r.status === 'success' && r.parsed_data)
-      .map((r) => ({ ...(r.parsed_data || {}), fileName: r.file_url || r.file }));
+      .map((r) => ({
+        ...(r.parsed_data || {}),
+        // Untuk PDF, simpan referensi ke berkas PDF aslinya (bukan halaman
+        // pertama saja) supaya nanti bisa diunduh utuh dari Surat Masuk.
+        fileName: r.original_file_url || r.file_url || r.file,
+        pageUrls: r.page_urls && r.page_urls.length > 0 ? r.page_urls : (r.file_url ? [r.file_url] : []),
+      }));
 
     const attention = results
       .filter((r) => r.status === 'error' || (r.status === 'success' && !r.parsed_data))
@@ -131,6 +137,11 @@ export default function AIReaderPage() {
       const { successes, attention } = splitResults(finalStatus.results || []);
       setExtractedDataList(successes);
       setFailedItems(attention);
+      // Untuk hasil tunggal (termasuk PDF multi-halaman), tampilkan semua
+      // halaman yang disimpan server (bukan cuma halaman pertama).
+      setImagePreviewUrls(
+        successes.length === 1 ? (successes[0].pageUrls || []).map((key: string) => `/api/documents/${key}`) : []
+      );
 
       if (successes.length === 0) {
         setErrorMsg(`Semua ${finalStatus.total} berkas gagal diproses. Periksa berkas Anda dan coba lagi.`);
@@ -155,9 +166,13 @@ export default function AIReaderPage() {
     setLiveSuccessCount(0);
     setLiveFailCount(0);
 
+    const isPdf = (file: File) => file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+
     // Single file keeps the direct, simple path — no batch machinery needed.
-    if (files.length === 1) {
-      setImagePreviewUrl(URL.createObjectURL(files[0]));
+    // PDF selalu lewat jalur batch karena /extract-surat hanya menerima gambar
+    // (PDF perlu dipecah per halaman dulu, itu terjadi di endpoint batch).
+    if (files.length === 1 && !isPdf(files[0])) {
+      setImagePreviewUrls([URL.createObjectURL(files[0])]);
       try {
         const result = await processFileMutation.mutateAsync(files[0]);
         setExtractedDataList([result]);
@@ -170,7 +185,7 @@ export default function AIReaderPage() {
       return;
     }
 
-    setImagePreviewUrl(null);
+    setImagePreviewUrls([]);
 
     let batchId: string;
     try {
@@ -204,7 +219,7 @@ export default function AIReaderPage() {
     setErrorMsg(null);
     setExtractedDataList([]);
     setFailedItems([]);
-    setImagePreviewUrl(null);
+    setImagePreviewUrls([]);
     setTotalFiles(total);
     setProcessedCount(0);
     setLiveSuccessCount(0);
@@ -221,7 +236,7 @@ export default function AIReaderPage() {
     setAppState('upload');
     setExtractedDataList([]);
     setFailedItems([]);
-    setImagePreviewUrl(null);
+    setImagePreviewUrls([]);
     setErrorMsg(null);
     setTotalFiles(0);
     setProcessedCount(0);
@@ -341,7 +356,7 @@ export default function AIReaderPage() {
           {extractedDataList.length === 1 ? (
             <div className="flex flex-col xl:flex-row gap-6 items-start">
               <VerificationPanel data={extractedDataList[0]} onReset={resetToUpload} />
-              <SuggestionPanel data={extractedDataList[0]} imagePreviewUrl={imagePreviewUrl} />
+              <SuggestionPanel data={extractedDataList[0]} imagePreviewUrls={imagePreviewUrls} />
             </div>
           ) : (
             <BulkValidationTable initialData={extractedDataList} />

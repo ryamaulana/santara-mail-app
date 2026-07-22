@@ -26,7 +26,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
           <Menu className="w-5 h-5" />
         </button>
         <h2 className="text-sm sm:text-base font-extrabold text-ink tracking-tight capitalize truncate">
-          SIPEDIG 110
+          Santara Mail
         </h2>
       </div>
 

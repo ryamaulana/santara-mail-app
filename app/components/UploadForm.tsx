@@ -50,7 +50,7 @@ export default function UploadForm({ onFilesSelected }: UploadFormProps) {
           <UploadCloud className="w-10 h-10 text-primary-700" />
         </div>
         <h3 className="text-xl font-semibold text-ink mb-2">Klik untuk mengunggah atau drag & drop</h3>
-        <p className="text-ink-soft text-sm mb-6">Mendukung format JPEG, PNG, WEBP (Bisa lebih dari 1 file sekaligus)</p>
+        <p className="text-ink-soft text-sm mb-6">Mendukung format JPEG, PNG, WEBP, PDF (Bisa lebih dari 1 file sekaligus)</p>
 
         <button className="px-6 py-3 bg-primary-600 text-white rounded-xl font-medium hover:bg-primary-500 transition-colors shadow-md">
           Pilih File Dokumen
@@ -59,7 +59,7 @@ export default function UploadForm({ onFilesSelected }: UploadFormProps) {
           type="file"
           className="hidden"
           ref={fileInputRef}
-          accept="image/jpeg, image/png, image/webp"
+          accept="image/jpeg, image/png, image/webp, application/pdf"
           multiple
           onChange={(e) => handleFiles(e.target.files)}
         />
