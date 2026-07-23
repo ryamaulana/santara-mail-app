@@ -4,6 +4,10 @@ import { decrypt, COOKIE_NAME } from "@/lib/session";
 
 const PUBLIC_PATHS = ["/login", "/api/auth/login"];
 const ADMIN_PATH_PREFIXES = ["/admin", "/api/admin"];
+// Reachable by every authenticated role regardless of the admin/non-admin
+// split below — a super admin forced to change their temp password must be
+// able to land here instead of being bounced straight back to /admin/users.
+const SHARED_AUTH_PATHS = ["/change-password"];
 
 function isAdminPath(path: string) {
   return ADMIN_PATH_PREFIXES.some((p) => path === p || path.startsWith(`${p}/`));
@@ -41,7 +45,7 @@ export default async function proxy(request: NextRequest) {
   // Super admin only manages accounts — bounce it away from the rest of the
   // app's pages. API-level enforcement for surat/profil lives in each route
   // handler so read-only shared endpoints (e.g. GET /api/profil) can stay open.
-  if (!isApi && !isPublic && !isAdminPath(path) && session?.role === "SUPER_ADMIN") {
+  if (!isApi && !isPublic && !isAdminPath(path) && !SHARED_AUTH_PATHS.includes(path) && session?.role === "SUPER_ADMIN") {
     return NextResponse.redirect(new URL("/admin/users", request.url));
   }
 
