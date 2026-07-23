@@ -3,14 +3,15 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, Lock, KeyRound, Check, X } from "lucide-react";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { AlertCircle, Lock, KeyRound, Check, X, LogOut } from "lucide-react";
+import { useCurrentUser, useLogout } from "@/hooks/useCurrentUser";
 import { PASSWORD_REQUIREMENTS, getPasswordPolicyError } from "@/lib/passwordPolicy";
 
 export default function ChangePasswordPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user, isLoading } = useCurrentUser();
+  const logout = useLogout();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -172,6 +173,15 @@ export default function ChangePasswordPage() {
               </button>
             </div>
           </form>
+
+          <button
+            type="button"
+            onClick={logout}
+            className="mt-4 w-full flex items-center justify-center gap-1.5 text-xs font-semibold text-panel-ink-soft hover:text-panel-ink transition cursor-pointer"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Keluar / kembali ke halaman login</span>
+          </button>
         </div>
       </div>
     </div>
